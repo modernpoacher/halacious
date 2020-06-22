@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 require('module-alias/register');
 
@@ -17,7 +17,7 @@ describe('Representation Factory', () => {
   let plugin;
   let representationFactory;
 
-  beforeEach(done => {
+  beforeEach((done) => {
     server = hapi.server({ port: 9090 });
 
     server
@@ -27,16 +27,13 @@ describe('Representation Factory', () => {
         representationFactory = new RepresentationFactory(plugin);
         done();
       })
-      .catch(err => {
+      .catch((err) => {
         done(err);
       });
   });
 
-  afterEach(done => {
-    server
-      .stop()
-      .then(done)
-      .catch(done);
+  afterEach((done) => {
+    server.stop().then(done).catch(done);
   });
 
   it('should create a new representation', () => {

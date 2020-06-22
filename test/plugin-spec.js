@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 require('module-alias/register');
 
@@ -23,17 +23,14 @@ const { name: PLUGIN } = require('halacious/package.json');
 describe('Halacious Plugin', () => {
   let server;
 
-  beforeEach(done => {
+  beforeEach((done) => {
     server = hapi.server({ port: 9090 });
 
     done();
   });
 
-  afterEach(done => {
-    server
-      .stop()
-      .then(done)
-      .catch(done);
+  afterEach((done) => {
+    server.stop().then(done).catch(done);
   });
 
   it('should have a registration function', () => {
@@ -41,7 +38,7 @@ describe('Halacious Plugin', () => {
     plugin.register.should.be.a('Function');
   });
 
-  it('should expose a namespace function', done => {
+  it('should expose a namespace function', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -56,7 +53,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should create a namespace', done => {
+  it('should create a namespace', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -79,7 +76,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should look up a namespace', done => {
+  it('should look up a namespace', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -105,7 +102,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should return a sorted array of namespaces', done => {
+  it('should return a sorted array of namespaces', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -138,7 +135,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should fail when registering an invalid namespace', done => {
+  it('should fail when registering an invalid namespace', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -157,7 +154,7 @@ describe('Halacious Plugin', () => {
       .catch(done); // shouldn't be called
   });
 
-  it('should add a rel to a namespace', done => {
+  it('should add a rel to a namespace', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -182,7 +179,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should look up a rel by prefix:name', done => {
+  it('should look up a rel by prefix:name', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -210,7 +207,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should remove a namespace', done => {
+  it('should remove a namespace', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -240,7 +237,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should look up a rel by namespace / name', done => {
+  it('should look up a rel by namespace / name', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -268,7 +265,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should add a rel to a specified namespace', done => {
+  it('should add a rel to a specified namespace', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -291,7 +288,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should return a sorted list of rels', done => {
+  it('should return a sorted list of rels', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -323,7 +320,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should bomb on a bad rel in strict mode', done => {
+  it('should bomb on a bad rel in strict mode', (done) => {
     server.route({
       method: 'get',
       path: '/foo',
@@ -362,14 +359,14 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(500);
       })
       .then(done)
       .catch(done);
   });
 
-  it('should install a directory-style namespace', done => {
+  it('should install a directory-style namespace', (done) => {
     server
       .register(halacious)
       .then(() => {
@@ -397,7 +394,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should route rel documentation', done => {
+  it('should route rel documentation', (done) => {
     server
       .register(vision)
       .then(() => server.register(halacious))
@@ -418,7 +415,7 @@ describe('Halacious Plugin', () => {
           url: '/rels/mycompany/boss'
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         res.payload.should.not.be.empty;
@@ -427,7 +424,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should resolve a named route path', done => {
+  it('should resolve a named route path', (done) => {
     server.route({
       method: 'get',
       path: '/{a}/{b}/{c}',
@@ -462,7 +459,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should encode parameter values when resolving a named route', done => {
+  it('should encode parameter values when resolving a named route', (done) => {
     server.route({
       method: 'get',
       path: '/deez/treez/{foo}/{bar}',
@@ -497,7 +494,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should passively ignore child objects in parameter hash when resolving a named route', done => {
+  it('should passively ignore child objects in parameter hash when resolving a named route', (done) => {
     server.route({
       method: 'get',
       path: '/deez/treez/{foo}/{bar}',
@@ -539,7 +536,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should handle presence of optional Hapi route parameters in a named route', done => {
+  it('should handle presence of optional Hapi route parameters in a named route', (done) => {
     server.route({
       method: 'get',
       path: '/deez/treez/{are?}',
@@ -559,7 +556,7 @@ describe('Halacious Plugin', () => {
       .register(halacious)
       .then(() => {
         let path = null;
-        const fn = function() {
+        const fn = function () {
           const {
             plugins: { [PLUGIN]: plugin }
           } = server;
@@ -578,7 +575,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should convert a json entity into a HAL representation with self and a simple link', done => {
+  it('should convert a json entity into a HAL representation with self and a simple link', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -616,7 +613,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -637,7 +634,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should convert a json entity into a HAL representation with self and a templated link', done => {
+  it('should convert a json entity into a HAL representation with self and a templated link', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -675,7 +672,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -697,7 +694,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should allow for programmatic population of a hal entity', done => {
+  it('should allow for programmatic population of a hal entity', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -736,7 +733,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -758,7 +755,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should support a hal configuration function', done => {
+  it('should support a hal configuration function', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -795,7 +792,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -817,7 +814,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should embed an object property', done => {
+  it('should embed an object property', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -862,7 +859,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -889,7 +886,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should support embedded url templates', done => {
+  it('should support embedded url templates', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -935,7 +932,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -964,7 +961,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should provide embedded collection support', done => {
+  it('should provide embedded collection support', (done) => {
     server.route({
       method: 'get',
       path: '/people',
@@ -1016,7 +1013,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -1059,7 +1056,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should invoke an optional toHal() method on the source entity', done => {
+  it('should invoke an optional toHal() method on the source entity', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -1098,7 +1095,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -1120,7 +1117,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it("should allow for programmatic population of a hal entity and it's configured embedded entities", done => {
+  it("should allow for programmatic population of a hal entity and it's configured embedded entities", (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -1176,7 +1173,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -1207,7 +1204,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should omit missing configured embedded entities', done => {
+  it('should omit missing configured embedded entities', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -1265,7 +1262,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -1296,7 +1293,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should allow an embedded entity to be forced to be a single element array', done => {
+  it('should allow an embedded entity to be forced to be a single element array', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -1350,7 +1347,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -1383,7 +1380,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should preserve 201 status code and use the location header when an entity has been POSTed', done => {
+  it('should preserve 201 status code and use the location header when an entity has been POSTed', (done) => {
     server.route({
       method: 'post',
       path: '/people',
@@ -1405,7 +1402,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(201);
 
         const result = JSON.parse(res.payload);
@@ -1423,7 +1420,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('use of location header for absolute link generation should not break url search', done => {
+  it('use of location header for absolute link generation should not break url search', (done) => {
     server.route({
       method: 'post',
       path: '/people',
@@ -1450,7 +1447,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(201);
 
         const result = JSON.parse(res.payload);
@@ -1465,7 +1462,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should support an array of acceptable media types', done => {
+  it('should support an array of acceptable media types', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -1487,7 +1484,7 @@ describe('Halacious Plugin', () => {
           url: '/people/100'
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         res.headers['content-type'].should.contain('application/json');
@@ -1508,7 +1505,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         res.headers['content-type'].should.contain('application/hal+json');
@@ -1526,7 +1523,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should regurgitate known query parameters in the self link', done => {
+  it('should regurgitate known query parameters in the self link', (done) => {
     server.route({
       method: 'get',
       path: '/people',
@@ -1560,7 +1557,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -1585,7 +1582,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should resolve relative locations', done => {
+  it('should resolve relative locations', (done) => {
     server.route({
       method: 'post',
       path: '/api/people',
@@ -1610,7 +1607,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(201);
 
         const result = JSON.parse(res.payload);
@@ -1628,7 +1625,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should preserve response headers', done => {
+  it('should preserve response headers', (done) => {
     server.route({
       method: 'get',
       path: '/api/people/100',
@@ -1653,7 +1650,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         res.headers['content-type'].should.equal('application/hal+json');
@@ -1665,7 +1662,7 @@ describe('Halacious Plugin', () => {
   });
 
   describe('when the absolute flag is turned on', () => {
-    it('should create an absolute self link', done => {
+    it('should create an absolute self link', (done) => {
       server.route({
         method: 'get',
         path: '/api/people/100',
@@ -1693,7 +1690,7 @@ describe('Halacious Plugin', () => {
             headers: { Accept: 'application/hal+json' }
           })
         )
-        .then(res => {
+        .then((res) => {
           const result = JSON.parse(res.payload);
           result._links.self.should.have.property(
             'href',
@@ -1704,7 +1701,7 @@ describe('Halacious Plugin', () => {
         .catch(done);
     });
 
-    it('should create an absolute non-self link', done => {
+    it('should create an absolute non-self link', (done) => {
       server.route({
         method: 'get',
         path: '/api/people/100',
@@ -1735,7 +1732,7 @@ describe('Halacious Plugin', () => {
             headers: { Accept: 'application/hal+json' }
           })
         )
-        .then(res => {
+        .then((res) => {
           const result = JSON.parse(res.payload);
           result._links.schedule.should.have.property(
             'href',
@@ -1746,7 +1743,7 @@ describe('Halacious Plugin', () => {
         .catch(done);
     });
 
-    it('should embed an object with an absolute link', done => {
+    it('should embed an object with an absolute link', (done) => {
       server.route({
         method: 'get',
         path: '/api/people/100',
@@ -1784,7 +1781,7 @@ describe('Halacious Plugin', () => {
             headers: { Accept: 'application/hal+json' }
           })
         )
-        .then(res => {
+        .then((res) => {
           const result = JSON.parse(res.payload);
           result._embedded['mco:boss']._links.self.should.have.property(
             'href',
@@ -1795,7 +1792,7 @@ describe('Halacious Plugin', () => {
         .catch(done);
     });
 
-    it('should handle created entities', done => {
+    it('should handle created entities', (done) => {
       server.route({
         method: 'post',
         path: '/api/people',
@@ -1825,7 +1822,7 @@ describe('Halacious Plugin', () => {
             headers: { Accept: 'application/hal+json' }
           })
         )
-        .then(res => {
+        .then((res) => {
           const result = JSON.parse(res.payload);
           result._links.self.should.have.property(
             'href',
@@ -1836,7 +1833,7 @@ describe('Halacious Plugin', () => {
         .catch(done);
     });
 
-    it('should make configured links absolute', done => {
+    it('should make configured links absolute', (done) => {
       server.route({
         method: 'post',
         path: '/api/people',
@@ -1871,7 +1868,7 @@ describe('Halacious Plugin', () => {
             headers: { Accept: 'application/hal+json' }
           })
         )
-        .then(res => {
+        .then((res) => {
           const result = JSON.parse(res.payload);
           result.should.have
             .property('_links')
@@ -1883,7 +1880,7 @@ describe('Halacious Plugin', () => {
     });
   });
 
-  it('should support resolving embedded hrefs by ids', done => {
+  it('should support resolving embedded hrefs by ids', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -1949,7 +1946,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -1983,7 +1980,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should support resolving link hrefs by ids', done => {
+  it('should support resolving link hrefs by ids', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -2001,7 +1998,7 @@ describe('Halacious Plugin', () => {
           hal: {
             query: '{?full}',
             links: {
-              'mco:boss': function(rep, entity) {
+              'mco:boss': function (rep, entity) {
                 return rep.route('person', { id: entity.bossId });
               }
             }
@@ -2030,7 +2027,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -2053,7 +2050,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should support absolute api root hrefs', done => {
+  it('should support absolute api root hrefs', (done) => {
     server = new hapi.Server({
       debug: { request: ['*'], log: ['*'] },
       port: 9090
@@ -2095,7 +2092,7 @@ describe('Halacious Plugin', () => {
           url: '/api/'
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -2121,7 +2118,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should embed an empty representation', done => {
+  it('should embed an empty representation', (done) => {
     server.route({
       method: 'get',
       path: '/people',
@@ -2163,7 +2160,7 @@ describe('Halacious Plugin', () => {
           url: '/people'
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -2188,7 +2185,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should not mess with array responses', done => {
+  it('should not mess with array responses', (done) => {
     server.route({
       method: 'get',
       path: '/people',
@@ -2208,7 +2205,7 @@ describe('Halacious Plugin', () => {
           url: '/people'
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -2224,7 +2221,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should not process internal routes', done => {
+  it('should not process internal routes', (done) => {
     const employee = { first: 'John', last: 'Doe' };
 
     server.route({
@@ -2248,7 +2245,7 @@ describe('Halacious Plugin', () => {
           allowInternals: true
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         res.result.should.equal(employee);
@@ -2257,7 +2254,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should support external filtering of requests', done => {
+  it('should support external filtering of requests', (done) => {
     const employee = { first: 'John', last: 'Doe' };
 
     server.route({
@@ -2280,7 +2277,7 @@ describe('Halacious Plugin', () => {
 
         plugin.should.respondTo('filter');
 
-        plugin.filter(request => {
+        plugin.filter((request) => {
           should.exist(request);
           return false;
         });
@@ -2291,7 +2288,7 @@ describe('Halacious Plugin', () => {
           url: '/people'
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         res.result.should.equal(employee);
@@ -2300,7 +2297,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should support overriding the url protocol', done => {
+  it('should support overriding the url protocol', (done) => {
     const employee = { first: 'John', last: 'Doe' };
 
     server.route({
@@ -2325,7 +2322,7 @@ describe('Halacious Plugin', () => {
           url: '/people'
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -2336,7 +2333,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should support overriding the hostname', done => {
+  it('should support overriding the hostname', (done) => {
     const employee = { first: 'John', last: 'Doe' };
 
     server.route({
@@ -2362,7 +2359,7 @@ describe('Halacious Plugin', () => {
           url: '/people'
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -2373,7 +2370,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should support overriding the url builder', done => {
+  it('should support overriding the url builder', (done) => {
     const employee = { first: 'John', last: 'Doe' };
 
     server.route({
@@ -2412,7 +2409,7 @@ describe('Halacious Plugin', () => {
           url: '/people'
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         const result = JSON.parse(res.payload);
@@ -2423,7 +2420,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should not HALify when another media type is preferred by default', done => {
+  it('should not HALify when another media type is preferred by default', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -2445,7 +2442,7 @@ describe('Halacious Plugin', () => {
           url: '/people/100'
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         res.headers['content-type'].should.contain('application/json');
@@ -2463,7 +2460,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         res.headers['content-type'].should.contain('application/json');
@@ -2481,7 +2478,7 @@ describe('Halacious Plugin', () => {
           headers: { Accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         res.headers['content-type'].should.contain('application/hal+json');
@@ -2499,7 +2496,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should HALify when application/hal+json is explicitly asked for', done => {
+  it('should HALify when application/hal+json is explicitly asked for', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -2522,7 +2519,7 @@ describe('Halacious Plugin', () => {
           headers: { accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         res.headers['content-type'].should.contain('application/hal+json');
@@ -2538,7 +2535,7 @@ describe('Halacious Plugin', () => {
       .catch(done);
   });
 
-  it('should not replace the original successful response to allow to modify it by other plugins', done => {
+  it('should not replace the original successful response to allow to modify it by other plugins', (done) => {
     server.route({
       method: 'get',
       path: '/people/{id}',
@@ -2587,7 +2584,7 @@ describe('Halacious Plugin', () => {
           headers: { accept: 'application/hal+json' }
         })
       )
-      .then(res => {
+      .then((res) => {
         res.statusCode.should.equal(200);
 
         res.headers['content-type'].should.contain('application/hal+json');

@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 require('module-alias/register');
 
@@ -37,7 +37,7 @@ async function init() {
         hal: {
           // you can also assign this function directly to the hal property above as a shortcut
           prepare(rep, next) {
-            rep.entity.items.forEach(item => {
+            rep.entity.items.forEach((item) => {
               let embed = rep.embed('item', `./${item.id}`, item);
               if (item.googlePlusId) {
                 embed.link(

@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 require('module-alias/register');
 
@@ -23,7 +23,7 @@ function Collection(items, start, total) {
   this.total = total || this.items.count;
 }
 
-Collection.prototype.toHal = function(rep, done) {
+Collection.prototype.toHal = function (rep, done) {
   let limit = Number(rep.request.query.limit) || 10;
   let uri = new Uri(rep.self);
   let prev = Math.max(0, this.start - limit);

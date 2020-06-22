@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 const gulp = require('gulp');
 const mocha = require('gulp-mocha');
@@ -9,12 +9,9 @@ const eslint = require('gulp-eslint');
 const tag = require('gulp-tag-version');
 const spawn = require('child_process').spawn;
 
-gulp.task('test', done => {
+gulp.task('test', (done) => {
   gulp.src(['lib/**/*']).on('finish', () => {
-    gulp
-      .src(['test/*.js'])
-      .pipe(mocha())
-      .on('end', done);
+    gulp.src(['test/*.js']).pipe(mocha()).on('end', done);
   });
 });
 
@@ -40,7 +37,7 @@ function inc(importance) {
   );
 }
 
-gulp.task('publish', done => {
+gulp.task('publish', (done) => {
   spawn('npm', ['publish'], { stdio: 'inherit' }).on('close', done);
 });
 
@@ -51,13 +48,10 @@ gulp.task('feature', () => inc('minor'));
 gulp.task('major', () => inc('major'));
 
 gulp.task('lint', () =>
-  gulp
-    .src('./lib/**/*.js')
-    .pipe(eslint())
-    .pipe(eslint.format())
+  gulp.src('./lib/**/*.js').pipe(eslint()).pipe(eslint.format())
 );
 
-gulp.task('push', done => {
+gulp.task('push', (done) => {
   git.push('origin', 'master', { args: '--tags' }, done);
 });
 

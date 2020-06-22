@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 require('module-alias/register');
 
@@ -13,7 +13,7 @@ function User(id, firstName, lastName, googlePlusId) {
   this.googlePlusId = googlePlusId;
 }
 
-User.prototype.toHal = function(rep, next) {
+User.prototype.toHal = function (rep, next) {
   if (this.googlePlusId) {
     rep.link('home', `http://plus.google.com/${this.googlePlusId}`);
     rep.ignore('googlePlusId');

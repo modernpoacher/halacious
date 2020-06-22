@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 // ESLint configuration
 // http://eslint.org/docs/user-guide/configuring
