@@ -1,37 +1,35 @@
-// 'use strict';
+require('module-alias/register')
 
-require('module-alias/register');
+const hapi = require('@hapi/hapi')
+const vision = require('@hapi/vision')
+const halacious = require('halacious')
 
-const hapi = require('@hapi/hapi');
-const vision = require('@hapi/vision');
-const halacious = require('halacious');
-
-function User(id, firstName, lastName, googlePlusId) {
-  this.id = id;
-  this.firstName = firstName;
-  this.lastName = lastName;
-  this.googlePlusId = googlePlusId;
+function User (id, firstName, lastName, googlePlusId) {
+  this.id = id
+  this.firstName = firstName
+  this.lastName = lastName
+  this.googlePlusId = googlePlusId
 }
 
 User.prototype.toHal = function (rep, next) {
   if (this.googlePlusId) {
-    rep.link('home', `http://plus.google.com/${this.googlePlusId}`);
-    rep.ignore('googlePlusId');
+    rep.link('home', `http://plus.google.com/${this.googlePlusId}`)
+    rep.ignore('googlePlusId')
   }
-  next();
-};
+  next()
+}
 
-async function init() {
-  const server = hapi.server({ port: 8080 });
+async function init () {
+  const server = hapi.server({ port: 8080 })
 
-  await server.register(vision);
+  await server.register(vision)
 
-  await server.register(halacious);
+  await server.register(halacious)
 
   server.route({
     method: 'get',
     path: '/users',
-    handler() {
+    handler () {
       return {
         start: 0,
         count: 2,
@@ -40,7 +38,7 @@ async function init() {
           new User(100, 'Brad', 'Leupen', '107835557095464780852'),
           new User(101, 'Mark', 'Zuckerberg')
         ]
-      };
+      }
     },
     config: {
       plugins: {
@@ -54,11 +52,11 @@ async function init() {
         }
       }
     }
-  });
+  })
 
-  await server.start();
+  await server.start()
 
-  console.log('Server started at %s', server.info.uri);
+  console.log('Server started at %s', server.info.uri)
 }
 
-init();
+init()

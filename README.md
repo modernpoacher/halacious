@@ -1,12 +1,10 @@
-# halacious for HAPI
+# Halacious for Hapi
 
-a better HAL processor for Hapi
+A HAL processor for Hapi.
 
-## Node.js and HAPI Versions
+## Campatibility
 
-For HAPI v17+ use current release branch (6.x). Note this also requires Node.js v8.10+.
-
-For HAPI v16 use legacy release branch (5.x).
+Compatible with Hapi v18.
 
 ## Overview
 *Halacious* is a plugin for the HapiJS web application server that makes **HATEOASIFYING** your app ridiculously
@@ -29,21 +27,22 @@ be accomplished without writing any code at all.
 - Bunches of unit tests
 
 ## Getting Started
-Start by npm installing the halacious library into your hapi project folder:
+Start by npm installing Halicious into your Hapi project folder:
+
 ```
-npm install halacious --save
+npm install @modernpoacher/halacious --save
 ```
 
 or
 
 ```
-yarn add halacious --dev
+yarn add @modernpoacher/halacious --dev
 ```
 
 Register the plugin with the app server
 ```javascript
 const hapi = require('@hapi/hapi');
-const halacious = require('halacious');
+const halacious = require('@modernpoacher/halacious');
 
 const server = hapi.server({ port: 8080 });
 
@@ -377,7 +376,7 @@ happily let you be lazy but its much better if we do things the Right Way.
 Halacious exposes its api to your Hapi server so that you may configure it at runtime like so:
  ```javascript
 const hapi = require('@hapi/hapi');
-const halacious = require('halacious');
+const halacious = require('@modernpoacher/halacious');
 
 async function init () {
     await server.register(halacious);
@@ -442,7 +441,7 @@ company's namespace. We can suck all these into the system in one fell swoop:
 
 ```javascript
 const hapi = require('@hapi/hapi');
-const halacious = require('halacious');
+const halacious = require('@modernpoacher/halacious');
 
 async function init () {
     const server = hapi.server({ port: 8080 });
@@ -473,7 +472,7 @@ configuration option. For example:
 
 ```javascript
 const hapi = require('@hapi/hapi');
-const halacious = require('halacious');
+const halacious = require('@modernpoacher/halacious');
 
 async function init () {
     const server = hapi.server({ port: 8080 });

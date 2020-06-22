@@ -27,3 +27,9 @@ node_modules
 .idea
 
 yarn.lock
+
+# User-defined NPM configuration
+.npmrc
+
+# User-defined NVM configuration
+.nvmrc

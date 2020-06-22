@@ -1,22 +1,20 @@
-// 'use strict';
+require('module-alias/register')
 
-require('module-alias/register');
+const hapi = require('@hapi/hapi')
+const vision = require('@hapi/vision')
+const halacious = require('halacious')
 
-const hapi = require('@hapi/hapi');
-const vision = require('@hapi/vision');
-const halacious = require('halacious');
+async function init () {
+  const server = hapi.server({ port: 8080 })
 
-async function init() {
-  const server = hapi.server({ port: 8080 });
+  await server.register(vision)
 
-  await server.register(vision);
-
-  await server.register(halacious);
+  await server.register(halacious)
 
   server.route({
     method: 'get',
     path: '/users',
-    handler() {
+    handler () {
       return {
         start: 0,
         count: 2,
@@ -30,35 +28,35 @@ async function init() {
           },
           { id: 101, firstName: 'Mark', lastName: 'Zuckerberg' }
         ]
-      };
+      }
     },
     config: {
       plugins: {
         hal: {
           // you can also assign this function directly to the hal property above as a shortcut
-          prepare(rep, next) {
+          prepare (rep, next) {
             rep.entity.items.forEach((item) => {
-              let embed = rep.embed('item', `./${item.id}`, item);
+              const embed = rep.embed('item', `./${item.id}`, item)
               if (item.googlePlusId) {
                 embed.link(
                   'home',
                   `http://plus.google.com/${item.googlePlusId}`
-                );
-                embed.ignore('googlePlusId');
+                )
+                embed.ignore('googlePlusId')
               }
-            });
-            rep.ignore('items');
+            })
+            rep.ignore('items')
             // dont forget to call next!
-            next();
+            next()
           }
         }
       }
     }
-  });
+  })
 
-  await server.start();
+  await server.start()
 
-  console.log('Server started at %s', server.info.uri);
+  console.log('Server started at %s', server.info.uri)
 }
 
-init();
+init()

@@ -1,32 +1,30 @@
-// 'use strict';
+require('module-alias/register')
 
-require('module-alias/register');
+const hapi = require('@hapi/hapi')
+const vision = require('@hapi/vision')
+const halacious = require('halacious')
 
-const hapi = require('@hapi/hapi');
-const vision = require('@hapi/vision');
-const halacious = require('halacious');
+async function init () {
+  const server = hapi.server({ port: 8080 })
 
-async function init() {
-  const server = hapi.server({ port: 8080 });
-
-  await server.register(vision);
+  await server.register(vision)
 
   await server.register({
     plugin: halacious,
     options: {
       mediaTypes: ['application/json', 'application/hal+json']
     }
-  });
+  })
 
   server.route({
     method: 'get',
     path: '/users/{userId}',
-    handler(req) {
+    handler (req) {
       return {
         id: req.params.userId,
         name: `User ${req.params.userId}`,
         googlePlusId: '107835557095464780852'
-      };
+      }
     },
     config: {
       plugins: {
@@ -38,11 +36,11 @@ async function init() {
         }
       }
     }
-  });
+  })
 
-  await server.start();
+  await server.start()
 
-  console.log('Server started at %s', server.info.uri);
+  console.log('Server started at %s', server.info.uri)
 }
 
-init();
+init()
