@@ -1,42 +1,40 @@
-// 'use strict';
+require('module-alias/register')
 
-require('module-alias/register');
+const hapi = require('@hapi/hapi')
+const vision = require('@hapi/vision')
+const halacious = require('halacious')
 
-const hapi = require('@hapi/hapi');
-const vision = require('@hapi/vision');
-const halacious = require('halacious');
+async function init () {
+  const server = hapi.server({ port: 8080 })
 
-async function init() {
-  const server = hapi.server({ port: 8080 });
+  await server.register(vision)
 
-  await server.register(vision);
-
-  await server.register(halacious);
+  await server.register(halacious)
 
   server.route({
     method: 'get',
     path: '/users/{id}',
-    handler(req) {
-      return { id: req.params.id, bossId: 101 };
+    handler (req) {
+      return { id: req.params.id, bossId: 101 }
     },
     config: {
       id: 'user',
       plugins: {
         hal: {
           links: {
-            boss(rep, entity) {
-              return rep.route('user', { id: entity.bossId });
+            boss (rep, entity) {
+              return rep.route('user', { id: entity.bossId })
             }
           }
         }
       }
     }
-  });
+  })
 
   server.route({
     method: 'get',
     path: '/users',
-    handler() {
+    handler () {
       return {
         start: 0,
         count: 2,
@@ -45,7 +43,7 @@ async function init() {
           { id: 100, firstName: 'Brad', lastName: 'Leupen' },
           { id: 101, firstName: 'Barack', lastName: 'Obama' }
         ]
-      };
+      }
     },
     config: {
       plugins: {
@@ -53,19 +51,19 @@ async function init() {
           embedded: {
             item: {
               path: 'items',
-              href(rep, ctx) {
-                return rep.route('user', { id: ctx.item.id });
+              href (rep, ctx) {
+                return rep.route('user', { id: ctx.item.id })
               }
             }
           }
         }
       }
     }
-  });
+  })
 
-  await server.start();
+  await server.start()
 
-  console.log('Server started at %s', server.info.uri);
+  console.log('Server started at %s', server.info.uri)
 }
 
-init();
+init()

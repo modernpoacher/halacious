@@ -1,34 +1,32 @@
-// 'use strict';
+require('module-alias/register')
 
-require('module-alias/register');
+const hapi = require('@hapi/hapi')
+const vision = require('@hapi/vision')
+const halacious = require('halacious')
 
-const hapi = require('@hapi/hapi');
-const vision = require('@hapi/vision');
-const halacious = require('halacious');
+const { name: PLUGIN } = require('halacious/package.json')
 
-const { name: PLUGIN } = require('halacious/package.json');
+async function init () {
+  const server = hapi.server({ port: 8080 })
 
-async function init() {
-  const server = hapi.server({ port: 8080 });
+  await server.register(vision)
 
-  await server.register(vision);
-
-  await server.register(halacious);
+  await server.register(halacious)
 
   server.plugins[PLUGIN].namespaces.add({
     dir: `${__dirname}/rels/mycompany`,
     prefix: 'mco'
-  });
+  })
 
   server.route({
     method: 'GET',
     path: '/users/{userId}',
-    handler(req) {
+    handler (req) {
       return {
         id: req.params.userId,
         name: `User ${req.params.userId}`,
         bossId: 200
-      };
+      }
     },
     config: {
       plugins: {
@@ -40,11 +38,11 @@ async function init() {
         }
       }
     }
-  });
+  })
 
-  await server.start();
+  await server.start()
 
-  console.log('Server started at %s', server.info.uri);
+  console.log('Server started at %s', server.info.uri)
 }
 
-init();
+init()
