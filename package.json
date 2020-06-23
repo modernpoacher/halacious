@@ -30,7 +30,7 @@
   "homepage": "https://github.com/modernpoacher/halacious",
   "devDependencies": {
     "@hapi/hapi": "18.4.1",
-    "@hapi/vision": "5.5.4",
+    "@hapi/vision": "6.0.0",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.1.0",
     "chai": "^4.2.0",
