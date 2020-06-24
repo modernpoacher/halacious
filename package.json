@@ -7,9 +7,9 @@
   },
   "main": "./index.js",
   "scripts": {
-    "lint": "eslint --color *.js lib test examples",
+    "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
-    "test": "mocha test",
+    "test": "cross-env NODE_ENV=test mocha test",
     "pre-commit": "npm run lint && npm test"
   },
   "repository": {
@@ -35,6 +35,7 @@
     "babel-loader": "^8.1.0",
     "chai": "^4.2.0",
     "chai-string": "^1.5.0",
+    "cross-env": "^7.0.2",
     "eslint": "^7.3.1",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.21.2",
