@@ -1,6 +1,6 @@
 {
   "name": "@modernpoacher/halacious",
-  "version": "6.1.7",
+  "version": "6.1.8",
   "description": "A better HAL processor for Hapi",
   "engines": {
     "node": ">=12.8.1"
