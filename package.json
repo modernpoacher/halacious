@@ -2,32 +2,44 @@
   "name": "@modernpoacher/halacious",
   "version": "6.1.10",
   "description": "A HAL processor for Hapi",
-  "engines": {
-    "node": ">=12.18.1"
-  },
-  "main": "./index.js",
-  "scripts": {
-    "lint": "eslint .",
-    "lint:fix": "npm run lint -- --fix",
-    "test": "cross-env NODE_ENV=test mocha test",
-    "pre-commit": "npm run lint && npm test"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/modernpoacher/halacious"
-  },
   "keywords": [
     "HAL",
     "Hapi",
     "hypermedia",
     "HATEOAS"
   ],
+  "main": "./index.js",
   "author": "Brad Leupen",
   "license": "MIT",
+  "engines": {
+    "node": ">=12.18.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/modernpoacher/halacious"
+  },
+  "homepage": "https://github.com/modernpoacher/halacious",
   "bugs": {
     "url": "https://github.com/modernpoacher/halacious/issues"
   },
-  "homepage": "https://github.com/modernpoacher/halacious",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "npm run lint -- --fix",
+    "test": "cross-env NODE_ENV=test mocha test",
+    "pre-commit": "npm run lint && npm test"
+  },
+  "dependencies": {
+    "@hapi/boom": "9.1.0",
+    "@hapi/hoek": "9.0.4",
+    "@hapi/joi": "15.1.1",
+    "async": "^3.2.0",
+    "lodash": "^4.17.15",
+    "marked": "^1.1.0",
+    "negotiator": "^0.6.2",
+    "pug": "^3.0.0",
+    "urijs": "^1.19.2",
+    "url-template": "^2.0.8"
+  },
   "devDependencies": {
     "@hapi/hapi": "18.4.1",
     "@hapi/vision": "6.0.0",
@@ -49,24 +61,12 @@
     "sinon": "^9.0.2",
     "sinon-chai": "^3.5.0"
   },
-  "dependencies": {
-    "@hapi/boom": "9.1.0",
-    "@hapi/hoek": "9.0.4",
-    "@hapi/joi": "15.1.1",
-    "async": "^3.2.0",
-    "lodash": "^4.17.15",
-    "marked": "^1.1.0",
-    "negotiator": "^0.6.2",
-    "pug": "^3.0.0",
-    "urijs": "^1.19.2",
-    "url-template": "^2.0.8"
+  "_moduleAliases": {
+    "halacious": "."
   },
   "husky": {
     "hooks": {
       "pre-commit": "npm run pre-commit"
     }
-  },
-  "_moduleAliases": {
-    "halacious": "."
   }
 }
