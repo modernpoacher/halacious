@@ -11,6 +11,9 @@
   "main": "./index.js",
   "types": "./types/index.d.ts",
   "author": "Brad Leupen",
+  "contributors": [
+    "Jonathan Perry <modernpoacher@modernpoacher.com> (Modern Poacher Limited)"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=12.19.0"
