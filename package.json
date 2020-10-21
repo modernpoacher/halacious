@@ -9,6 +9,7 @@
     "HATEOAS"
   ],
   "main": "./index.js",
+  "types": "./types/index.d.ts",
   "author": "Brad Leupen",
   "license": "MIT",
   "engines": {
