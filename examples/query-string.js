@@ -1,5 +1,7 @@
 require('module-alias/register')
 
+const path = require('path')
+
 const hapi = require('@hapi/hapi')
 const vision = require('@hapi/vision')
 const halacious = require('halacious')
@@ -19,7 +21,7 @@ async function init () {
   })
 
   server.plugins[PLUGIN].namespaces.add({
-    dir: `${__dirname}/rels/mycompany`,
+    dir: path.resolve(__dirname, 'rels/mycompany'),
     prefix: 'mco'
   })
 

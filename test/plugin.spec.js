@@ -1,5 +1,7 @@
 require('module-alias/register')
 
+const path = require('path')
+
 const chai = require('chai')
 
 const should = chai.should()
@@ -346,7 +348,7 @@ describe('Halacious Plugin', () => {
         } = server
 
         namespaces.add({
-          dir: `${__dirname}/rels/mycompany`,
+          dir: path.resolve(__dirname, 'rels/mycompany'),
           prefix: 'mco'
         })
       })
@@ -373,7 +375,7 @@ describe('Halacious Plugin', () => {
         } = server
 
         const namespace = plugin.namespaces.add({
-          dir: `${__dirname}/rels/mycompany`,
+          dir: path.resolve(__dirname, 'rels/mycompany'),
           prefix: 'mco'
         })
 
@@ -402,7 +404,7 @@ describe('Halacious Plugin', () => {
         } = server
 
         plugin.namespaces.add({
-          dir: `${__dirname}/rels/mycompany`,
+          dir: path.resolve(__dirname, 'rels/mycompany'),
           prefix: 'mco'
         })
       })
