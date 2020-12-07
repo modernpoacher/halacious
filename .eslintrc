@@ -9,8 +9,5 @@
     "ecmaVersion": 2020,
     "sourceType": "module",
     "requireConfigFile": false
-  },
-  "plugins": [
-    "standard"
-  ]
+  }
 }
