@@ -62,7 +62,7 @@
     "husky": "^4.3.5",
     "mocha": "^8.2.1",
     "module-alias": "^2.2.2",
-    "sinon": "^9.2.1",
+    "sinon": "^9.2.2",
     "sinon-chai": "^3.5.0"
   },
   "_moduleAliases": {
