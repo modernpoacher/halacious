@@ -62,8 +62,8 @@
     "husky": "^5.2.0",
     "mocha": "^8.3.2",
     "module-alias": "^2.2.2",
-    "sinon": "^9.2.4",
-    "sinon-chai": "^3.5.0"
+    "sinon": "^10.0.0",
+    "sinon-chai": "^3.6.0"
   },
   "_moduleAliases": {
     "halacious": "."
