@@ -45,7 +45,7 @@
     "url-template": "^2.0.8"
   },
   "devDependencies": {
-    "@babel/core": "^7.13.14",
+    "@babel/core": "^7.13.15",
     "@babel/eslint-parser": "^7.13.14",
     "@hapi/hapi": "18.4.1",
     "@hapi/vision": "6.0.1",
@@ -62,7 +62,7 @@
     "husky": "^6.0.0",
     "mocha": "^8.3.2",
     "module-alias": "^2.2.2",
-    "sinon": "^10.0.0",
+    "sinon": "^10.0.1",
     "sinon-chai": "^3.6.0"
   },
   "_moduleAliases": {
