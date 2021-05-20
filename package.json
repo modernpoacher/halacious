@@ -38,15 +38,15 @@
     "@hapi/joi": "15.1.1",
     "async": "^3.2.0",
     "lodash": "^4.17.21",
-    "marked": "^2.0.3",
+    "marked": "^2.0.4",
     "negotiator": "^0.6.2",
     "pug": "^3.0.2",
     "urijs": "^1.19.6",
     "url-template": "^2.0.8"
   },
   "devDependencies": {
-    "@babel/core": "^7.14.2",
-    "@babel/eslint-parser": "^7.14.2",
+    "@babel/core": "^7.14.3",
+    "@babel/eslint-parser": "^7.14.3",
     "@hapi/hapi": "18.4.1",
     "@hapi/vision": "6.0.1",
     "babel-loader": "^8.2.2",
