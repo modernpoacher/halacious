@@ -54,12 +54,12 @@
     "chai-string": "^1.5.0",
     "cross-env": "^7.0.3",
     "eslint": "^7.27.0",
-    "eslint-plugin-mocha": "^8.1.0",
+    "eslint-plugin-mocha": "^8.2.0",
     "husky": "^6.0.0",
     "mocha": "^8.4.0",
     "module-alias": "^2.2.2",
-    "sinon": "^11.0.0",
-    "sinon-chai": "^3.6.0",
+    "sinon": "^11.1.0",
+    "sinon-chai": "^3.7.0",
     "standard": "^16.0.3"
   },
   "_moduleAliases": {
