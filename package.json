@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.14.8",
-    "@babel/eslint-parser": "^7.14.7",
+    "@babel/eslint-parser": "^7.14.9",
     "@hapi/hapi": "18.4.1",
     "@hapi/vision": "6.0.1",
     "babel-loader": "^8.2.2",
