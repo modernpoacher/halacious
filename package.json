@@ -56,7 +56,7 @@
     "eslint": "^7.32.0",
     "eslint-plugin-mocha": "^9.0.0",
     "husky": "^7.0.2",
-    "mocha": "^9.1.0",
+    "mocha": "^9.1.1",
     "module-alias": "^2.2.2",
     "sinon": "^11.1.2",
     "sinon-chai": "^3.7.0",
