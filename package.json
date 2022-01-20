@@ -45,7 +45,7 @@
     "url-template": "^2.0.8"
   },
   "devDependencies": {
-    "@babel/core": "^7.16.7",
+    "@babel/core": "^7.16.10",
     "@babel/eslint-parser": "^7.16.5",
     "@hapi/hapi": "18.4.1",
     "@hapi/vision": "6.0.1",
