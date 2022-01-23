@@ -39,13 +39,13 @@
     "async": "^3.2.3",
     "lodash": "^4.17.21",
     "marked": "^4.0.10",
-    "negotiator": "^0.6.2",
+    "negotiator": "^0.6.3",
     "pug": "^3.0.2",
     "urijs": "^1.19.7",
     "url-template": "^2.0.8"
   },
   "devDependencies": {
-    "@babel/core": "^7.16.10",
+    "@babel/core": "^7.16.12",
     "@babel/eslint-parser": "^7.16.5",
     "@hapi/hapi": "18.4.1",
     "@hapi/vision": "6.0.1",
