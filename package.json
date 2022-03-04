@@ -41,7 +41,7 @@
     "marked": "^4.0.12",
     "negotiator": "^0.6.3",
     "pug": "^3.0.2",
-    "urijs": "^1.19.8",
+    "urijs": "^1.19.9",
     "url-template": "2.0.8"
   },
   "devDependencies": {
