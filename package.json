@@ -42,7 +42,7 @@
     "negotiator": "^0.6.3",
     "pug": "^3.0.2",
     "urijs": "^1.19.11",
-    "url-template": "2.0.8"
+    "url-template": "3.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.6",
