@@ -16,7 +16,7 @@ describe('Representation Factory', () => {
   let representationFactory
 
   beforeEach((done) => {
-    server = hapi.server({ port: 9090 })
+    server = hapi.server({ port: 9191 })
 
     server
       .register(halacious)

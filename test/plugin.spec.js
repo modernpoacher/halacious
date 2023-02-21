@@ -24,7 +24,7 @@ describe('Halacious Plugin', () => {
   let server
 
   beforeEach((done) => {
-    server = hapi.server({ port: 9090 })
+    server = hapi.server({ port: 9191 })
 
     done()
   })
@@ -1686,7 +1686,7 @@ describe('Halacious Plugin', () => {
         .then(() =>
           server.inject({
             method: 'get',
-            url: 'http://localhost:9090/api/people/100',
+            url: 'http://localhost:9191/api/people/100',
             headers: { Accept: 'application/hal+json' }
           })
         )
@@ -1694,7 +1694,7 @@ describe('Halacious Plugin', () => {
           const result = JSON.parse(res.payload)
           result._links.self.should.have.property(
             'href',
-            'http://localhost:9090/api/people/100'
+            'http://localhost:9191/api/people/100'
           )
         })
         .then(done)
@@ -1728,7 +1728,7 @@ describe('Halacious Plugin', () => {
         .then(() =>
           server.inject({
             method: 'get',
-            url: 'http://localhost:9090/api/people/100',
+            url: 'http://localhost:9191/api/people/100',
             headers: { Accept: 'application/hal+json' }
           })
         )
@@ -1736,7 +1736,7 @@ describe('Halacious Plugin', () => {
           const result = JSON.parse(res.payload)
           result._links.schedule.should.have.property(
             'href',
-            'http://localhost:9090/api/people/100/schedule'
+            'http://localhost:9191/api/people/100/schedule'
           )
         })
         .then(done)
@@ -1777,7 +1777,7 @@ describe('Halacious Plugin', () => {
         .then(() =>
           server.inject({
             method: 'get',
-            url: 'http://localhost:9090/api/people/100',
+            url: 'http://localhost:9191/api/people/100',
             headers: { Accept: 'application/hal+json' }
           })
         )
@@ -1785,7 +1785,7 @@ describe('Halacious Plugin', () => {
           const result = JSON.parse(res.payload)
           result._embedded['mco:boss']._links.self.should.have.property(
             'href',
-            'http://localhost:9090/api/people/100/boss'
+            'http://localhost:9191/api/people/100/boss'
           )
         })
         .then(done)
@@ -1818,7 +1818,7 @@ describe('Halacious Plugin', () => {
         .then(() =>
           server.inject({
             method: 'post',
-            url: 'http://localhost:9090/api/people',
+            url: 'http://localhost:9191/api/people',
             headers: { Accept: 'application/hal+json' }
           })
         )
@@ -1826,7 +1826,7 @@ describe('Halacious Plugin', () => {
           const result = JSON.parse(res.payload)
           result._links.self.should.have.property(
             'href',
-            'http://localhost:9090/api/people/100'
+            'http://localhost:9191/api/people/100'
           )
         })
         .then(done)
@@ -1864,7 +1864,7 @@ describe('Halacious Plugin', () => {
         .then(() =>
           server.inject({
             method: 'post',
-            url: 'http://localhost:9090/api/people',
+            url: 'http://localhost:9191/api/people',
             headers: { Accept: 'application/hal+json' }
           })
         )
@@ -1873,7 +1873,7 @@ describe('Halacious Plugin', () => {
           result.should.have
             .property('_links')
             .that.has.property('mco:boss')
-            .that.has.property('href', 'http://localhost:9090/api/people/101')
+            .that.has.property('href', 'http://localhost:9191/api/people/101')
         })
         .then(done)
         .catch(done)
@@ -2053,7 +2053,7 @@ describe('Halacious Plugin', () => {
   it('should support absolute api root hrefs', (done) => {
     server = new hapi.Server({
       debug: { request: ['*'], log: ['*'] },
-      port: 9090
+      port: 9191
     })
 
     server.route({
