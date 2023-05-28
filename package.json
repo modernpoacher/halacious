@@ -30,15 +30,20 @@
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
     "test": "cross-env NODE_ENV=test mocha test",
-    "pre-commit": "npm run lint && npm test"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@hapi/boom": "9.1.0",
     "@hapi/hoek": "9.0.4",
     "@hapi/joi": "15.1.1",
+    "@typescript-eslint/eslint-plugin": "^5.59.7",
+    "@typescript-eslint/parser": "^5.59.7",
     "async": "^3.2.4",
+    "eslint-config-standard-with-typescript": "^34.0.1",
     "lodash": "^4.17.21",
     "marked": "^5.0.3",
+    "marked-gfm-heading-id": "^3.0.3",
+    "marked-mangle": "^1.0.1",
     "negotiator": "^0.6.3",
     "pug": "^3.0.2",
     "urijs": "^1.19.11",

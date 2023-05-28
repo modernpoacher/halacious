@@ -1,3 +1,6 @@
 declare module '@modernpoacher/halacious' {
-  export const plugin: object
+  const plugin: object
+  export {
+    plugin
+  }
 }

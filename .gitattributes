@@ -4,8 +4,9 @@
 # LF line endings
 *.yaml text eol=lf
 *.yml text eol=lf
+*.jade text eol=lf
 *.json text eol=lf
-.js text eol=lf
+*.js text eol=lf
 *.mjs text eol=lf
 *.cjs text eol=lf
 *.jsx text eol=lf
