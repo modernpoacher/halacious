@@ -1,4 +1,4 @@
-declare namespace halacious {
+declare namespace HalaciousTypes {
   export interface Collection {
     uid: string
   }
@@ -27,4 +27,4 @@ declare namespace halacious {
   }
 }
 
-export default halacious
+export default HalaciousTypes
