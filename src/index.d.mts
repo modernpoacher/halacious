@@ -27,4 +27,4 @@ declare namespace halacious {
   }
 }
 
-export = halacious
+export default halacious

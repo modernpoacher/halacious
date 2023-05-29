@@ -1,12 +1,11 @@
-const chai = require('chai')
+import chai from 'chai'
+import hapi from '@hapi/hapi'
+import halacious from '#halacious'
+import RepresentationFactory from '#halacious/representation'
 
 const should = chai.should()
-const hapi = require('@hapi/hapi')
-const halacious = require('#halacious')
 
-const { RepresentationFactory } = require('#halacious/lib/representation')
-
-const { name: PLUGIN } = require('#halacious/package.json')
+const PLUGIN = '@modernpoacher/halacious'
 
 describe('Representation Factory', () => {
   let server

@@ -1,34 +1,34 @@
-const joi = require('@hapi/joi')
-const boom = require('@hapi/boom')
-const hoek = require('@hapi/hoek')
-const _ = require('lodash')
-const fs = require('fs')
-const path = require('path')
-const pug = require('pug')
-const util = require('util')
-const async = require('async')
-const {
+import joi from '@hapi/joi'
+import boom from '@hapi/boom'
+import hoek from '@hapi/hoek'
+import _ from 'lodash'
+import fs from 'node:fs'
+import path from 'node:path'
+import pug from 'pug'
+import util from 'util'
+import async from 'async'
+import {
   marked
-} = require('marked')
-const {
+} from 'marked'
+import {
   mangle
-} = require('marked-mangle')
-const {
+} from 'marked-mangle'
+import {
   gfmHeadingId
-} = require('marked-gfm-heading-id')
-const urlTemplate = require('url-template')
-const Negotiator = require('negotiator')
-const URITemplate = require('urijs/src/URITemplate')
-const url = require('url')
-const URI = require('urijs')
-
-const {
-  RepresentationFactory
-} = require('./representation')
+} from 'marked-gfm-heading-id'
+import urlTemplate from 'url-template'
+import Negotiator from 'negotiator'
+import URITemplate from 'urijs/src/URITemplate.js'
+import url from 'url'
+import URI from 'urijs'
+import IAM from '#where-am-i'
+import RepresentationFactory from './representation.mjs'
 
 const HAL_MIME_TYPE = 'application/hal+json'
 
-const re = /{([^{}]+)}|([^{}]+)/g
+const REG = /{([^{}]+)}|([^{}]+)/g
+
+const PKG = JSON.parse(fs.readFileSync(path.join(IAM, './package.json')))
 
 function reach (object, path) {
   const parts = path ? path.split('.') : []
@@ -51,7 +51,7 @@ function flattenContext (template, ctx) {
   let arr
   const result = {}
 
-  while ((arr = re.exec(template)) !== null) {
+  while ((arr = REG.exec(template)) !== null) {
     if (arr[1]) {
       const value = reach(ctx, arr[1])
       result[arr[1]] = value && value.toString()
@@ -92,8 +92,8 @@ const optionsSchema = {
  * @param opts
  * @param next
  */
-exports.plugin = {
-  pkg: require('../package'),
+const plugin = {
+  pkg: PKG,
 
   async register (server, opts) {
     let settings = opts
@@ -964,7 +964,7 @@ exports.plugin = {
           engines: {
             jade: pug
           },
-          path: path.join(__dirname, '../views'),
+          path: path.join(IAM, './views'),
           isCached: false
         })
         server.route({
@@ -982,4 +982,8 @@ exports.plugin = {
 
     server.ext('onPreStart', internals.preStart)
   }
+}
+
+export {
+  plugin
 }

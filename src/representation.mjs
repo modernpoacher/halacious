@@ -1,8 +1,8 @@
 
-const _ = require('lodash')
-const hoek = require('@hapi/hoek')
+import _ from 'lodash'
+import hoek from '@hapi/hoek'
+import URI from 'urijs'
 
-const URI = require('urijs')
 const templatedRE = /{*}/
 
 /**
@@ -15,7 +15,7 @@ const templatedRE = /{*}/
  * @param root
  * @constructor
  */
-class Representation {
+export class Representation {
   constructor (factory, self, entity, root) {
     this._halacious = factory._halacious
     this.factory = factory
@@ -247,7 +247,7 @@ class Representation {
  * @param request a hapi request object
  * @constructor
  */
-class RepresentationFactory {
+export class RepresentationFactory {
   constructor (halacious, request) {
     this._halacious = halacious
     this._request = request
@@ -269,4 +269,4 @@ class RepresentationFactory {
   }
 }
 
-module.exports.RepresentationFactory = RepresentationFactory
+export default RepresentationFactory

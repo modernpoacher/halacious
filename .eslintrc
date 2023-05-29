@@ -13,7 +13,8 @@
   "overrides": [
     {
       "files": [
-        "*.ts"
+        "*.mts",
+        "*.cts"
       ],
       "plugins": [
         "@typescript-eslint"

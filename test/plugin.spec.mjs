@@ -1,22 +1,24 @@
-const path = require('path')
+import path from 'path'
 
-const chai = require('chai')
+import chai from 'chai'
+
+import hapi from '@hapi/hapi'
+import vision from '@hapi/vision'
+import sinon from 'sinon'
+import sinonChai from 'sinon-chai'
+import chaiString from 'chai-string'
+import halacious from '#halacious'
+import { plugin } from '#halacious/plugin'
+import _ from 'lodash'
+import url from 'url'
+import IAM from '#where-am-i'
 
 const should = chai.should()
-const hapi = require('@hapi/hapi')
-const vision = require('@hapi/vision')
-const sinon = require('sinon')
-const sinonChai = require('sinon-chai')
-const chaiString = require('chai-string')
-const halacious = require('#halacious')
-const { plugin } = require('#halacious/lib/plugin')
-const _ = require('lodash')
-const url = require('url')
 
 chai.use(sinonChai)
 chai.use(chaiString)
 
-const { name: PLUGIN } = require('#halacious/package.json')
+const PLUGIN = '@modernpoacher/halacious'
 
 describe('Halacious Plugin', () => {
   let server
@@ -346,7 +348,7 @@ describe('Halacious Plugin', () => {
         } = server
 
         namespaces.add({
-          dir: path.resolve(__dirname, 'rels/mycompany'),
+          dir: path.join(IAM, './test/rels/mycompany'),
           prefix: 'mco'
         })
       })
@@ -373,7 +375,7 @@ describe('Halacious Plugin', () => {
         } = server
 
         const namespace = plugin.namespaces.add({
-          dir: path.resolve(__dirname, 'rels/mycompany'),
+          dir: path.join(IAM, './test/rels/mycompany'),
           prefix: 'mco'
         })
 
@@ -402,7 +404,7 @@ describe('Halacious Plugin', () => {
         } = server
 
         plugin.namespaces.add({
-          dir: path.resolve(__dirname, 'rels/mycompany'),
+          dir: path.join(IAM, './test/rels/mycompany'),
           prefix: 'mco'
         })
       })
