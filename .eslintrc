@@ -10,17 +10,19 @@
     "sourceType": "module",
     "requireConfigFile": false
   },
-  "overrides": [{
-    "files": [
-      "*.ts"
-    ],
-    "plugins": [
-      "@typescript-eslint"
-    ],
-    "extends": "standard-with-typescript",
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "project": "tsconfig.json"
+  "overrides": [
+    {
+      "files": [
+        "*.ts"
+      ],
+      "plugins": [
+        "@typescript-eslint"
+      ],
+      "extends": "standard-with-typescript",
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": "tsconfig.json"
+      }
     }
-  }]
+  ]
 }

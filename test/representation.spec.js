@@ -1,14 +1,12 @@
-require('module-alias/register')
-
 const chai = require('chai')
 
 const should = chai.should()
 const hapi = require('@hapi/hapi')
-const halacious = require('halacious')
+const halacious = require('#halacious')
 
-const { RepresentationFactory } = require('halacious/lib/representation')
+const { RepresentationFactory } = require('#halacious/lib/representation')
 
-const { name: PLUGIN } = require('halacious/package')
+const { name: PLUGIN } = require('#halacious/package.json')
 
 describe('Representation Factory', () => {
   let server

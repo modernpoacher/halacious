@@ -42,7 +42,7 @@ yarn add @modernpoacher/halacious --dev
 Register the plugin with the app server
 ```javascript
 const hapi = require('@hapi/hapi');
-const halacious = require('@modernpoacher/halacious');
+const halacious = require('#halacious');
 
 const server = hapi.server({ port: 8080 });
 
@@ -376,7 +376,7 @@ happily let you be lazy but its much better if we do things the Right Way.
 Halacious exposes its api to your Hapi server so that you may configure it at runtime like so:
  ```javascript
 const hapi = require('@hapi/hapi');
-const halacious = require('@modernpoacher/halacious');
+const halacious = require('#halacious');
 
 async function init () {
     await server.register(halacious);
@@ -441,7 +441,7 @@ company's namespace. We can suck all these into the system in one fell swoop:
 
 ```javascript
 const hapi = require('@hapi/hapi');
-const halacious = require('@modernpoacher/halacious');
+const halacious = require('#halacious');
 
 async function init () {
     const server = hapi.server({ port: 8080 });
@@ -472,7 +472,7 @@ configuration option. For example:
 
 ```javascript
 const hapi = require('@hapi/hapi');
-const halacious = require('@modernpoacher/halacious');
+const halacious = require('#halacious');
 
 async function init () {
     const server = hapi.server({ port: 8080 });

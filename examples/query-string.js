@@ -1,12 +1,10 @@
-require('module-alias/register')
-
 const path = require('path')
 
 const hapi = require('@hapi/hapi')
 const vision = require('@hapi/vision')
-const halacious = require('halacious')
+const halacious = require('#halacious')
 
-const { name: PLUGIN } = require('halacious/package')
+const { name: PLUGIN } = require('#halacious/package')
 
 async function init () {
   const server = hapi.server({ port: 8080 })

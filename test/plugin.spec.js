@@ -1,5 +1,3 @@
-require('module-alias/register')
-
 const path = require('path')
 
 const chai = require('chai')
@@ -10,15 +8,15 @@ const vision = require('@hapi/vision')
 const sinon = require('sinon')
 const sinonChai = require('sinon-chai')
 const chaiString = require('chai-string')
-const halacious = require('halacious')
-const { plugin } = require('halacious/lib/plugin')
+const halacious = require('#halacious')
+const { plugin } = require('#halacious/lib/plugin')
 const _ = require('lodash')
 const url = require('url')
 
 chai.use(sinonChai)
 chai.use(chaiString)
 
-const { name: PLUGIN } = require('halacious/package')
+const { name: PLUGIN } = require('#halacious/package.json')
 
 describe('Halacious Plugin', () => {
   let server
