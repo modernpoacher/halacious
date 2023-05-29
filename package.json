@@ -9,10 +9,9 @@
     "HATEOAS"
   ],
   "main": "./index.js",
-  "types": "./types/index.d.ts",
-  "author": "Brad Leupen",
+  "author": "Jonathan Perry <modernpoacher@modernpoacher.com> (Modern Poacher Limited)",
   "contributors": [
-    "Jonathan Perry <modernpoacher@modernpoacher.com> (Modern Poacher Limited)"
+    "Brad Leupen"
   ],
   "license": "MIT",
   "engines": {
