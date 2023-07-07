@@ -40,7 +40,7 @@
     "@typescript-eslint/parser": "^5.61.0",
     "async": "^3.2.4",
     "lodash": "^4.17.21",
-    "marked": "^5.1.0",
+    "marked": "^5.1.1",
     "marked-gfm-heading-id": "^3.0.4",
     "marked-mangle": "^1.1.0",
     "negotiator": "^0.6.3",
