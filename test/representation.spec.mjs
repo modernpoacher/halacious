@@ -1,4 +1,4 @@
-import chai from 'chai'
+import * as chai from 'chai'
 import hapi from '@hapi/hapi'
 import halacious from '#halacious'
 import RepresentationFactory from '#halacious/representation'

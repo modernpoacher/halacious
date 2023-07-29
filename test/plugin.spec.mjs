@@ -1,6 +1,6 @@
 import path from 'path'
 
-import chai from 'chai'
+import * as chai from 'chai'
 
 import hapi from '@hapi/hapi'
 import vision from '@hapi/vision'
