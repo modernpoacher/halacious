@@ -43,7 +43,7 @@
     "async": "^3.2.4",
     "lodash": "^4.17.21",
     "marked": "^9.0.3",
-    "marked-gfm-heading-id": "^3.0.8",
+    "marked-gfm-heading-id": "^3.1.0",
     "marked-mangle": "^1.1.4",
     "negotiator": "^0.6.3",
     "pug": "^3.0.2",
