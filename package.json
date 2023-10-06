@@ -65,7 +65,7 @@
     "eslint-config-standard-with-typescript": "35.0.0",
     "husky": "^8.0.3",
     "mocha": "^10.2.0",
-    "sinon": "^16.0.0",
+    "sinon": "^16.1.0",
     "sinon-chai": "^3.7.0"
   },
   "imports": {
