@@ -42,7 +42,7 @@
     "@hapi/joi": "15.1.1",
     "async": "^3.2.5",
     "lodash": "^4.17.21",
-    "marked": "^11.0.1",
+    "marked": "^11.1.0",
     "marked-gfm-heading-id": "^3.1.2",
     "marked-mangle": "^1.1.6",
     "negotiator": "^0.6.3",
