@@ -55,7 +55,7 @@
     "@babel/eslint-parser": "^7.23.3",
     "@hapi/hapi": "18.4.1",
     "@hapi/vision": "6.0.1",
-    "@sequencemedia/sinon-chai": "^0.0.5",
+    "@sequencemedia/sinon-chai": "^0.0.6",
     "@typescript-eslint/eslint-plugin": "5.61.0",
     "@typescript-eslint/parser": "5.61.0",
     "chai": "^5.0.0",
