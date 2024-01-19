@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import hoek from '@hapi/hoek'
+import * as hoek from '@hapi/hoek'
 import URI from 'urijs'
 
 const templatedRE = /{*}/
