@@ -1,6 +1,6 @@
-import joi from '@hapi/joi'
-import boom from '@hapi/boom'
-import hoek from '@hapi/hoek'
+import joi from 'joi'
+import * as boom from '@hapi/boom'
+import * as hoek from '@hapi/hoek'
 import _ from 'lodash'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -10,17 +10,11 @@ import async from 'async'
 import {
   marked
 } from 'marked'
-import {
-  mangle
-} from 'marked-mangle'
-import {
-  gfmHeadingId
-} from 'marked-gfm-heading-id'
-import urlTemplate from 'url-template'
-import Negotiator from 'negotiator'
-import URITemplate from 'urijs/src/URITemplate.js'
 import url from 'url'
 import URI from 'urijs'
+import * as urlTemplate from 'url-template'
+import Negotiator from 'negotiator'
+import URITemplate from 'urijs/src/URITemplate.js'
 import IAM from '#where-am-i'
 import RepresentationFactory from './representation.mjs'
 
@@ -61,7 +55,7 @@ function flattenContext (template, ctx) {
   return result
 }
 
-const optionsSchema = {
+const optionsSchema = joi.object({
   absolute: joi.boolean().default(false),
   host: joi.string(),
   hostname: joi.string(),
@@ -84,7 +78,7 @@ const optionsSchema = {
   mediaTypes: joi.array().items(joi.string()).single().default([HAL_MIME_TYPE]),
   requireHalJsonAcceptHeader: joi.boolean().default(false),
   marked: joi.object().default({})
-}
+})
 
 /**
  * Registers plugin routes and an "api" object with the hapi server.
@@ -92,20 +86,19 @@ const optionsSchema = {
  * @param opts
  * @param next
  */
-const plugin = {
+export const plugin = {
   pkg: PKG,
 
   async register (server, opts) {
     let settings = opts
 
-    joi.validate(opts, optionsSchema, (err, validated) => {
-      if (err) throw err
+    const { error, value } = optionsSchema.validate(opts)
 
-      settings = validated
-    })
+    if (error) throw error
 
-    marked.use(gfmHeadingId(settings.marked))
-    marked.use(mangle(settings.marked))
+    settings = value
+
+    marked.setOptions(settings.marked)
 
     const selection = settings.apiServerLabel
       ? server.select(settings.apiServerLabel)
@@ -118,7 +111,7 @@ const plugin = {
     internals.byPrefix = {}
 
     // valid rel options
-    internals.relSchema = {
+    internals.relSchema = joi.object({
       // the rel name, will default to file's basename if available
       name: joi.string().required(),
 
@@ -130,17 +123,19 @@ const plugin = {
 
       // returns the qualified name of the rel (including the namespace)
       qname: joi
-        .func()
+        .function()
         .optional()
         .default(function () {
-          return this.namespace
-            ? util.format('%s:%s', this.namespace.prefix, this.name)
-            : this.name
+          return function () {
+            return this.namespace
+              ? util.format('%s:%s', this.namespace.prefix, this.name)
+              : this.name
+          }
         })
-    }
+    }).unknown()
 
     // valid namespace options
-    internals.nsSchema = {
+    internals.nsSchema = joi.object({
       // the namespace name, will default to dir basename if available
       name: joi.string().required(),
 
@@ -158,38 +153,44 @@ const plugin = {
 
       // validates and adds a rel to the namespace
       rel: joi
-        .func()
+        .function()
         .optional()
-        .default(function (rel) {
-          this.rels = this.rels || {}
+        .default(function () {
+          return function (rel) {
+            this.rels = this.rels || {}
 
-          if (_.isString(rel)) rel = { name: rel }
+            if (_.isString(rel)) rel = { name: rel }
 
-          rel.name =
-            rel.name ||
-            (rel.file && path.basename(rel.file, path.extname(rel.file)))
-          joi.validate(rel, internals.relSchema, (err, value) => {
-            if (err) throw err
+            rel.name =
+              rel.name ||
+              (rel.file && path.basename(rel.file, path.extname(rel.file)))
+
+            const { error, value } = internals.relSchema.validate(rel)
+            if (error) throw error
+
             rel = value
-          })
-          this.rels[rel.name] = rel
-          rel.namespace = this
-          return this
+
+            this.rels[rel.name] = rel
+            rel.namespace = this
+            return this
+          }
         }),
 
       // synchronously scans a directory for rel descriptors and adds them to the namespace
       scanDirectory: joi
-        .func()
+        .function()
         .optional()
-        .default(function (directory) {
-          const files = fs.readdirSync(directory)
-          files.forEach(function (file) {
-            this.rel({ file: path.join(directory, file) })
-          }, this)
+        .default(function () {
+          return function (directory) {
+            const files = fs.readdirSync(directory)
+            files.forEach(function (file) {
+              this.rel({ file: path.join(directory, file) })
+            }, this)
 
-          return this
+            return this
+          }
         })
-    }
+    })
 
     internals.filter = function (request) {
       return _.get(request.route.settings, 'plugins.hal', true)
@@ -214,13 +215,14 @@ const plugin = {
         namespace.name || (namespace.dir && path.basename(namespace.dir))
 
       // fail fast if the namespace isnt valid
-      joi.validate(namespace, internals.nsSchema, (err, value) => {
-        if (err) throw err
-        namespace = value
+      const { error, value } = internals.nsSchema.validate(namespace)
 
-        // would prefer to initialize w/ joi but it keeps a static reference to the value for some reason
-        namespace.rels = {}
-      })
+      if (error) throw error
+
+      namespace = value
+
+      // would prefer to initialize w/ joi but it keeps a static reference to the value for some reason
+      namespace.rels = {}
 
       if (namespace.dir) {
         namespace.scanDirectory(namespace.dir)
@@ -321,11 +323,10 @@ const plugin = {
         }
       } else {
         // could be globally qualified (e.g. 'self')
-        joi.validate({ name: namespace }, internals.relSchema, (err, value) => {
-          if (err) throw err
+        const { error, value } = internals.relSchema.validate({ name: namespace })
+        if (error) throw error
 
-          rel = value
-        })
+        rel = value
       }
 
       return rel
@@ -377,8 +378,8 @@ const plugin = {
     }
 
     // see http://tools.ietf.org/html/draft-kelly-json-hal-06#section-8.2
-    internals.linkSchema = {
-      href: joi.alternatives([joi.string(), joi.func()]).required(),
+    internals.linkSchema = joi.object({
+      href: joi.alternatives([joi.string(), joi.function()]).required(),
       templated: joi.boolean().optional(),
       title: joi.string().optional(),
       type: joi.string().optional(),
@@ -386,7 +387,7 @@ const plugin = {
       name: joi.string().optional(),
       profile: joi.string().optional(),
       hreflang: joi.string().optional()
-    }
+    })
 
     internals.isRelativePath = function (path) {
       return (
@@ -406,10 +407,10 @@ const plugin = {
         _.isFunction(link) || _.isString(link)
           ? { href: link }
           : hoek.clone(link)
-      joi.validate(link, internals.linkSchema, (err, value) => {
-        if (err) throw err
-        link = value
-      })
+      const { error, value } = internals.linkSchema.validate(link)
+
+      if (error) throw error
+      link = value
 
       if (
         relativeTo &&
@@ -505,7 +506,7 @@ const plugin = {
       const resolveHref = function (href, ctx) {
         return _.isFunction(href)
           ? href(rep, ctx)
-          : urlTemplate.parse(href).expand(flattenContext(href, ctx))
+          : urlTemplate.parseTemplate(href).expand(flattenContext(href, ctx))
       }
 
       try {
@@ -855,19 +856,17 @@ const plugin = {
      * @param filterFn
      */
     internals.setFilter = function (filterFn) {
-      joi.validate(filterFn, joi.func(), (err) => {
-        if (err) throw err
+      const { error } = joi.function().validate(filterFn)
+      if (error) throw error
 
-        internals.filter = filterFn
-      })
+      internals.filter = filterFn
     }
 
     internals.setUrlBuilder = function (urlBuilder) {
-      joi.validate(urlBuilder, joi.func(), (err) => {
-        if (err) throw err
+      const { error } = joi.function().validate(urlBuilder)
+      if (error) throw error
 
-        internals.buildUrl = urlBuilder
-      })
+      internals.buildUrl = urlBuilder
     }
 
     const api = {
@@ -982,8 +981,4 @@ const plugin = {
 
     server.ext('onPreStart', internals.preStart)
   }
-}
-
-export {
-  plugin
 }

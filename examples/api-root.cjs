@@ -2,7 +2,7 @@ const hapi = require('@hapi/hapi')
 const vision = require('@hapi/vision')
 const halacious = require('#halacious')
 
-const PLUGIN = '@modernpoacher/halacious'
+const PLUGIN = 'halacious' // '@modernpoacher/halacious'
 
 async function init () {
   const server = hapi.server({ port: 8080 })

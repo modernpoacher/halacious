@@ -4,10 +4,11 @@ A HAL processor for Hapi.
 
 ## Campatibility
 
-Compatible with Hapi v18.
+Compatible with Hapi v21.
 
 ## Overview
-*Halacious* is a plugin for the HapiJS web application server that makes **HATEOASIFYING** your app ridiculously
+
+_Halacious_ is a plugin for the HapiJS web application server that makes **HATEOASIFYING** your app ridiculously
 easy. When paired with a well-aged HAL client-side library, you will feel the warmth of loose API coupling and the feeling
 of moral superiorty as you rid your SPA of hard-coded api links.
 
@@ -16,6 +17,7 @@ secret sauce. Halacious embraces Hapi's configuration-centric approach to applic
 be accomplished without writing any code at all.
 
 ## Features
+
 - Dead-simple namespace/rel registration system that encourages you to document your API as you go
 - Automatic api root REST endpoint generation that instantly gives you links to all top-level API endpoints
 - Automatic rel documentation site generator so that your fully resolved rel names actually, you know, point somewhere.
@@ -27,162 +29,181 @@ be accomplished without writing any code at all.
 - Bunches of unit tests
 
 ## Getting Started
+
 Start by npm installing Halicious into your Hapi project folder:
 
-```
+```shell
 npm install @modernpoacher/halacious --save
 ```
 
 or
 
-```
+```shell
 yarn add @modernpoacher/halacious --dev
 ```
 
 Register the plugin with the app server
-```javascript
-const hapi = require('@hapi/hapi');
-const halacious = require('#halacious');
 
-const server = hapi.server({ port: 8080 });
+```javascript
+import hapi from '@hapi/hapi'
+import halacious from '#halacious'
 
 async function init () {
-    await server.register(halacious)
+  const server = hapi.server({ port: 8080 })
 
-    server.route({
-        method: 'get',
-        path: '/hello/{name}',
-        handler: function (req) {
-          return { message: 'Hello, '+req.params.name };
-        }
-    });
+  await server.register(halacious)
 
-    await server.start()
+  server.route({
+    method: 'get',
+    path: '/hello/{name}',
+    handler (req) {
+      return { message: 'Hello, '+req.params.name }
+    }
+  })
 
-    console.info('Server started at %s', server.info.uri);
+  await server.start()
+
+  console.info('Server started at %s', server.info.uri)
 }
 
-init();
+init()
 ```
+
 Launch the server:
-```
+
+```shell
 node ./examples/hello-world
 ```
 
 Make a request
-```
+
+```shell
 curl -H 'Accept: application/hal+json' http://localhost:8080/hello/world
 ```
 
 See the response
-```
+
+```json
 {
-    "_links": {
-        "self": {
-            "href": "/hello/world"
-        }
-    },
-    "message": "Hello, world"
+  "_links": {
+    "self": {
+      "href": "/hello/world"
+    }
+  },
+  "message": "Hello, world"
 }
 ```
+
 ## Linking
+
 Links may be declared directly within the route config.
+
 ```javascript
 server.route({
-    method: 'get',
-    path: '/users/{userId}',
-    handler: function (req) {
-        return { id: req.params.userId, name: 'User ' + req.params.userId, googlePlusId: '107835557095464780852' };
-    },
-    config: {
-        plugins: {
-            hal: {
-                links: {
-                    'home': 'http://plus.google.com/{googlePlusId}'
-                },
-                ignore: 'googlePlusId' // remove the id property from the response
-            }
-        }
+  method: 'get',
+  path: '/users/{userId}',
+  handler (req) {
+    return { id: req.params.userId, name: 'User ' + req.params.userId, googlePlusId: '107835557095464780852' }
+  },
+  config: {
+    plugins: {
+      hal: {
+        links: {
+          'home': 'http://plus.google.com/{googlePlusId}'
+        },
+        ignore: 'googlePlusId' // remove the id property from the response
+      }
     }
-});
+  }
+})
 ```
-```
+
+```shell
 curl -H 'Accept: application/hal+json' http://localhost:8080/users/100
 ```
+
 will produce:
-```
+
+```json
 {
-    "_links": {
-        "self": {
-            "href": "/users/1234"
-        },
-        "home": {
-            "href": "http://plus.google.com/107835557095464780852"
-        }
+  "_links": {
+    "self": {
+      "href": "/users/1234"
     },
-    "id": "100",
-    "name": "User 1234"
+    "home": {
+      "href": "http://plus.google.com/107835557095464780852"
+    }
+  },
+  "id": "100",
+  "name": "User 1234"
 }
 ```
 
 ## Embedding
+
 HAL allows you to conserve bandwidth by optionally embedding link payloads in the original request. Halacious will
 automatically convert nested objects into embedded HAL representations (if you ask nicely).
 
 ```javascript
 server.route({
-    method: 'get',
-    path: '/users/{userId}',
-    handler: function (req) {
-        return {
-            id: req.params.userId,
-            name: 'User ' + req.params.userId,
-            boss: {
-                id: 1234,
-                name: 'Boss Man'
-            }
-        };
-    },
-    config: {
-        plugins: {
-            hal: {
-                embedded: {
-                    'boss': {
-                        path: 'boss', // the property name of the object to embed
-                        href: '../{item.id}'
-                    }
-                }
-            }
-        }
+  method: 'get',
+  path: '/users/{userId}',
+  handler (req) {
+    return {
+      id: req.params.userId,
+      name: 'User ' + req.params.userId,
+      boss: {
+        id: 1234,
+        name: 'Boss Man'
+      }
     }
-});
+  },
+  config: {
+    plugins: {
+      hal: {
+        embedded: {
+          'boss': {
+            path: 'boss', // the property name of the object to embed
+            href: '../{item.id}'
+          }
+        }
+      }
+    }
+  }
+})
 ```
-```
-curl -H 'Accept: application/hal+json' http://localhost:8080/users/100
 
+```shell
+curl -H 'Accept: application/hal+json' http://localhost:8080/users/100
+```
+
+will produce:
+
+```json
 {
-    "_links": {
-        "self": {
-            "href": "/users/100"
-        }
-    },
-    "id": "100",
-    "name": "User 100",
-    "_embedded": {
-        "boss": {
-            "_links": {
-                "self": {
-                    "href": "/users/1234"
-                }
-            },
-            "id": 1234,
-            "name": "Boss Man"
-        }
+  "_links": {
+    "self": {
+      "href": "/users/100"
     }
+  },
+  "id": "100",
+  "name": "User 100",
+  "_embedded": {
+    "boss": {
+      "_links": {
+        "self": {
+          "href": "/users/1234"
+        }
+      },
+      "id": 1234,
+      "name": "Boss Man"
+    }
+  }
 }
 ```
 
 ## Programmatic configuration of HAL representations
+
 You may find the need to take the wheel on occasion and directly configure outbound representions. For example,
 some links may be conditional on potentially asynchronous criteria. Fortunately, Halacious provides two ways to do this:
 
@@ -190,130 +211,131 @@ some links may be conditional on potentially asynchronous criteria. Fortunately,
 2. By implementing a `toHal()` method directly on a wrapped entity.
 
 In either case, the method signature is the same: `fn(rep, callback)` where
+
 - `rep` - a representation object with the following properties and functions:
-    - `factory` - a factory reference for creating new representations. The factory object implements one method:
-        - `create(entity, selfHref)` - wraps entity with a new Hal representation, whose self link will point to selfHref
-    - `request` - the originating hapi request
-    - `self` - a shortcut to the representation's self link
-    - `entity` - the original wrapped entity
-    - `prop(name, value)` - manually adds a name/value pair to the representation
-    - `merge(object)` - merges the properties of another object into the representation
-    - `ignore(...propertyNames)` - prevents fields from being included in the response
-    - `link(relName, href)` - adds a new link to the `_links` collection, returning the new link. Link objects support
-    the following properties (See see http://tools.ietf.org/html/draft-kelly-json-hal-06#section-8.2 for more information):
-        - `href`
-        - `templated`
-        - `title`
-        - `type`
-        - `deprecation`
-        - `name`
-        - `profile`
-        - `hreflang`
-    - `embed(rel, self, entity)` - adds an entity to the representation's `_embedded` collection with the supplied rel link relation and self href, returning a new representation
+  - `factory` - a factory reference for creating new representations. The factory object implements one method:
+    - `create(entity, selfHref)` - wraps entity with a new Hal representation, whose self link will point to selfHref
+  - `request` - the originating hapi request
+  - `self` - a shortcut to the representation's self link
+  - `entity` - the original wrapped entity
+  - `prop(name, value)` - manually adds a name/value pair to the representation
+  - `merge(object)` - merges the properties of another object into the representation
+  - `ignore(...propertyNames)` - prevents fields from being included in the response
+  - `link(relName, href)` - adds a new link to the `_links` collection, returning the new link. Link objects support
+    the following properties (See see http://tools.ietf.org/html/draft-kelly-json-hal-06#section-8.2 for more information): - `href` - `templated` - `title` - `type` - `deprecation` - `name` - `profile` - `hreflang`
+  - `embed(rel, self, entity)` - adds an entity to the representation's `_embedded` collection with the supplied rel link relation and self href, returning a new representation
     object for further configuration.
 - `callback([err], [representation])` - an asynchronous callback function to be called when configuration of the hal entity
-is complete. Most of the time this function should be called with no arguments. Only pass arguments if there has been
-an error or if a completely new representation has been created with `rep.factory.create()`.
+  is complete. Most of the time this function should be called with no arguments. Only pass arguments if there has been
+  an error or if a completely new representation has been created with `rep.factory.create()`.
 
 #### Example 1: A `prepare()` function declared in the route descriptor.
+
 ```javascript
 server.route({
-    method: 'get',
-    path: '/users',
-    handler: function (req) {
-        return {
-            start: 0,
-            count: 2,
-            limit: 2,
-            items: [
-                { id: 100, firstName: 'Brad', lastName: 'Leupen', googlePlusId: '107835557095464780852'},
-                { id: 101, firstName: 'Mark', lastName: 'Zuckerberg'}
-            ]
-        };
-    },
-    config: {
-        plugins: {
-            hal: {
-                // you can also assign this function directly to the hal property above as a shortcut
-                prepare: function (rep, next) {
-                    rep.entity.items.forEach(function (item) {
-                        var embed = rep.embed('item', './' + item.id, item);
-                        if (item.googlePlusId) {
-                            embed.link('home', 'http://plus.google.com/' + item.googlePlusId);
-                            embed.ignore('googlePlusId');
-                        }
-                    });
-                    rep.ignore('items');
-                    // dont forget to call next!
-                    next();
-                }
-            }
-        }
+  method: 'get',
+  path: '/users',
+  handler (req) {
+    return {
+      start: 0,
+      count: 2,
+      limit: 2,
+      items: [
+        { id: 100, firstName: 'Brad', lastName: 'Leupen', googlePlusId: '107835557095464780852'},
+        { id: 101, firstName: 'Mark', lastName: 'Zuckerberg'}
+      ]
     }
-});
+  },
+  config: {
+    plugins: {
+      hal: {
+        // you can also assign this function directly to the hal property above as a shortcut
+        prepare (rep, next) {
+          rep.entity.items.forEach(function (item) {
+            const embed = rep.embed('item', './' + item.id, item)
+            if (item.googlePlusId) {
+              embed.link('home', 'http://plus.google.com/' + item.googlePlusId)
+              embed.ignore('googlePlusId')
+            }
+          })
+          rep.ignore('items')
+          // dont forget to call next!
+          next()
+        }
+      }
+    }
+  }
+})
 ```
-```
-curl -H 'Accept: application/hal+json' http://localhost:8080/users
 
+```shell
+curl -H 'Accept: application/hal+json' http://localhost:8080/users
+```
+
+will produce:
+
+```json
 {
-    "_links": {
-        "self": {
-            "href": "/users"
-        }
-    },
-    "start": 0,
-    "count": 2,
-    "limit": 2,
-    "_embedded": {
-        "item": [
-            {
-                "_links": {
-                    "self": {
-                        "href": "/users/100"
-                    },
-                    "home": {
-                        "href": "http://plus.google.com/107835557095464780852"
-                    }
-                },
-                "id": 100,
-                "firstName": "Brad",
-                "lastName": "Leupen"
-            },
-            {
-                "_links": {
-                    "self": {
-                        "href": "/users/101"
-                    }
-                },
-                "id": 101,
-                "firstName": "Mark",
-                "lastName": "Zuckerberg"
-            }
-        ]
+  "_links": {
+    "self": {
+      "href": "/users"
     }
+  },
+  "start": 0,
+  "count": 2,
+  "limit": 2,
+  "_embedded": {
+    "item": [
+      {
+        "_links": {
+          "self": {
+            "href": "/users/100"
+          },
+          "home": {
+            "href": "http://plus.google.com/107835557095464780852"
+          }
+        },
+        "id": 100,
+        "firstName": "Brad",
+        "lastName": "Leupen"
+      },
+      {
+        "_links": {
+          "self": {
+            "href": "/users/101"
+          }
+        },
+        "id": 101,
+        "firstName": "Mark",
+        "lastName": "Zuckerberg"
+      }
+    ]
+  }
 }
 ```
+
 #### Example 2: Implementing `toHal()` on a domain entity:
+
 ```javascript
 function User(id, firstName, lastName, googlePlusId) {
-    this.id = id;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.googlePlusId = googlePlusId;
+  this.id = id
+  this.firstName = firstName
+  this.lastName = lastName
+  this.googlePlusId = googlePlusId
 }
 
 User.prototype.toHal = function(rep, next) {
-    if (this.googlePlusId) {
-        rep.link('home', 'http://plus.google.com/' + this.googlePlusId);
-        rep.ignore('googlePlusId');
-    }
-    next();
-};
+  if (this.googlePlusId) {
+    rep.link('home', 'http://plus.google.com/' + this.googlePlusId)
+    rep.ignore('googlePlusId')
+  }
+  next()
+}
 
 server.route({
     method: 'get',
     path: '/users',
-    handler: function (req) {
+    handler (req) {
         return {
             start: 0,
             count: 2,
@@ -322,7 +344,7 @@ server.route({
                 new User(100, 'Brad', 'Leupen', '107835557095464780852'),
                 new User(101, 'Mark', 'Zuckerberg')
             ]
-        };
+        }
     },
     config: {
         plugins: {
@@ -336,121 +358,130 @@ server.route({
             }
         }
     }
-});
+})
 ```
 
 ## The HAL route configuration object
+
 The `config.plugins.hal` route configuration object takes the following format:
+
 - A function `fn(rep, next)` - for purely programmatic control over the representation
-or
+  or
 - An object with the following properties:
-    - `api` - an optional top level api rel name to assign to this route. Setting a value will cause this route to be included
-    in the root api resource's _links collection.
-    - `prepare(rep, next)` - an optional prepare function
-    - `ignore` - A String or array of strings containing the names of properties to remove from the output. Can be used
+  - `api` - an optional top level api rel name to assign to this route. Setting a value will cause this route to be included
+    in the root api resource's \_links collection.
+  - `prepare(rep, next)` - an optional prepare function
+  - `ignore` - A String or array of strings containing the names of properties to remove from the output. Can be used
     to remove reduntant information from the response
-    - `query` - An RFC 6570 compatible query string that should be communicated to your clients. See: http://tools.ietf.org/html/rfc6570.
+  - `query` - An RFC 6570 compatible query string that should be communicated to your clients. See: http://tools.ietf.org/html/rfc6570.
     Example: `{?q*,start,limit}`. These parameters will be included in top level api links. They will also be included in self links if supplied in the request.
     Query parameters that are not included in the template, such as runtime tokens, will be excluded from the self href.
-    - `links` - An object whose keys are rel names and whose values are href strings or link objects that contain
-     at least an `href` property. Hrefs may be absolute or relative to the representation's self link. Hrefs may also contain
-     `{expression}` template expressions, which are resolved against the wrapped entity.
-    - `embedded` An object whose keys are rel names and whose values are configuration objects with:
-        - `path` - a path expression to evaluate against the wrapped entity to derive the object to embed.
-        - `href` - a Function, String or link object that will be used to define the entity's self relation. Like links,
-        embedded href's may also be templated. Unlike links, embedded href templates have access to two state variables:
-            - `self` - the parent entity
-            - `item` - the child entity
-        - `links`
-        - `embedded` (recursively evaluated)
-        - `prepare(rep, next)`
-    - `absolute` - a boolean true/false. if true, hrefs for this representation will include protocal, server, and port.
-        Default: false
+  - `links` - An object whose keys are rel names and whose values are href strings or link objects that contain
+    at least an `href` property. Hrefs may be absolute or relative to the representation's self link. Hrefs may also contain
+    `{expression}` template expressions, which are resolved against the wrapped entity.
+  - `embedded` An object whose keys are rel names and whose values are configuration objects with:
+    - `path` - a path expression to evaluate against the wrapped entity to derive the object to embed.
+    - `href` - a Function, String or link object that will be used to define the entity's self relation. Like links,
+      embedded href's may also be templated. Unlike links, embedded href templates have access to two state variables: - `self` - the parent entity - `item` - the child entity
+    - `links`
+    - `embedded` (recursively evaluated)
+    - `prepare(rep, next)`
+  - `absolute` - a boolean true/false. if true, hrefs for this representation will include protocal, server, and port.
+    Default: false
 
 ## Namespaces and Rels
+
 So far, we have not done a real good job in our examples defining our link relations. Unless registered with the IANA,
 link relations should really be unique URLs that resolve to documentation regarding their semantics. Halacious will
 happily let you be lazy but its much better if we do things the Right Way.
 
 ### Manually creating a namespace
+
 Halacious exposes its api to your Hapi server so that you may configure it at runtime like so:
- ```javascript
-const hapi = require('@hapi/hapi');
-const halacious = require('#halacious');
+
+```javascript
+import hapi from '@hapi/hapi'
+import halacious from '#halacious'
 
 async function init () {
-    await server.register(halacious);
+  const server = hapi.server({ port: 8080 })
 
-    const namespace = server.plugins.halacious.namespaces.add({ name: 'mycompany', description: 'My Companys namespace', prefix: 'mco'});
-    namespace.rel({ name: 'users', description: 'a collection of users' });
-    namespace.rel({ name: 'user', description: 'a single user' });
-    namespace.rel({ name: 'boss', description: 'a users boss' });
+  await server.register(halacious)
 
-    server.route({
-        method: 'get',
-        path: '/users/{userId}',
-        handler: function (req) {
-            return { id: req.params.userId, name: 'User ' + req.params.userId, bossId: 200 };
-        },
-        config: {
-            plugins: {
-                hal: {
-                    links: {
-                        'mco:boss': '../{bossId}'
-                    },
-                    ignore: 'bossId'
-                }
-            }
+  const namespace = server.plugins.halacious.namespaces.add({ name: 'mycompany', description: 'My Companys namespace', prefix: 'mco'})
+  namespace.rel({ name: 'users', description: 'a collection of users' })
+  namespace.rel({ name: 'user', description: 'a single user' })
+  namespace.rel({ name: 'boss', description: 'a users boss' })
+
+  server.route({
+    method: 'get',
+    path: '/users/{userId}',
+    handler (req) {
+        return { id: req.params.userId, name: 'User ' + req.params.userId, bossId: 200 }
+    },
+    config: {
+      plugins: {
+        hal: {
+          links: {
+              'mco:boss': '../{bossId}'
+          },
+          ignore: 'bossId'
         }
-    });
+      }
+    }
+  })
 }
 
 init()
 ```
- Now, when we access the server we see a new type of link in the `_links` collection, `curies`. The curies link provides a mechanism
- to use shorthand rel names while preserving their uniqueness. Without the curie, the 'mco:boss' rel key would be expanded
- to read `/rels/mycompany/boss`
 
- ```
- curl -H 'Accept: application/hal+json' http://localhost:8080/users/100
+Now, when we access the server we see a new type of link in the `_links` collection, `curies`. The curies link provides a mechanism to use shorthand rel names while preserving their uniqueness. Without the curie, the 'mco:boss' rel key would be expanded to read `/rels/mycompany/boss`
 
- {
-     "_links": {
-         "self": {
-             "href": "/users/100"
-         },
-         "curies": [
-             {
-                 "name": "mco",
-                 "href": "/rels/mycompany/{rel}",
-                 "templated": true
-             }
-         ],
-         "mco:boss": {
-             "href": "/users/200"
-         }
-     },
-     "id": "100",
-     "name": "User 100"
- }
- ```
+```shell
+curl -H 'Accept: application/hal+json' http://localhost:8080/users/100
+```
+
+will produce:
+
+```json
+{
+  "_links": {
+    "self": {
+      "href": "/users/100"
+    },
+    "curies": [
+      {
+        "name": "mco",
+        "href": "/rels/mycompany/{rel}",
+        "templated": true
+      }
+    ],
+    "mco:boss": {
+      "href": "/users/200"
+    }
+  },
+  "id": "100",
+  "name": "User 100"
+}
+```
 
 ### Creating a namespace from a folder of documentated rels
+
 In our examples folder, we have created a folder `rels/mycompany` containing markdown documents for all of the rels in our
 company's namespace. We can suck all these into the system in one fell swoop:
 
 ```javascript
-const hapi = require('@hapi/hapi');
-const halacious = require('#halacious');
+import hapi from '@hapi/hapi'
+import halacious from '#halacious'
 
 async function init () {
-    const server = hapi.server({ port: 8080 });
+  const server = hapi.server({ port: 8080 })
 
-    await server.register(halacious);
+  await server.register(halacious)
 
-    server.plugins.halacious.namespaces.add({ dir: __dirname + '/rels/mycompany', prefix: 'mco' })
+  server.plugins.halacious.namespaces.add({ dir: __dirname + '/rels/mycompany', prefix: 'mco' })
 
-    await server.start()
+  await server.start()
 }
 
 init()
@@ -459,59 +490,61 @@ init()
 Ideally these documents should provide your api consumer enough semantic information to navigate your api.
 
 ## Rels documentation
+
 Halacious includes an (extremely) barebones namespace / rel navigator for users to browse your documentation.
 The server binds to the `/rels` path on your server by default.
 
-_Note: Hapi 9 / 10 users must install and configure the vision views plugin to enable this feature.
+\_Note: Hapi 9 / 10 users must install and configure the vision views plugin to enable this feature.
 
 ## Automatic /api root
+
 Discoverability is a key tenant of any hypermedia system. HAL requires that only the root API url be known to clients of your
 application, from which all other urls may be derived via rel names. If you want, Halacious will create this root api
 route for you automatically. All you need to do is to identify which resources to include by using the `api` route
 configuration option. For example:
 
 ```javascript
-const hapi = require('@hapi/hapi');
-const halacious = require('#halacious');
+import hapi from '@hapi/hapi'
+import halacious from '#halacious'
 
 async function init () {
-    const server = hapi.server({ port: 8080 });
+  const server = hapi.server({ port: 8080 })
 
-    await server.register(halacious);
+  await server.register(halacious)
 
-    const namespace = server.plugins.halacious.namespaces.add({ name: 'mycompany', description: 'My Companys namespace', prefix: 'mco'});
-    namespace.rel({ name: 'users', description: 'a collection of users' });
-    namespace.rel({ name: 'user', description: 'a single user' });
+  const namespace = server.plugins.halacious.namespaces.add({ name: 'mycompany', description: 'My Companys namespace', prefix: 'mco'})
+  namespace.rel({ name: 'users', description: 'a collection of users' })
+  namespace.rel({ name: 'user', description: 'a single user' })
 
-    server.route({
-        method: 'get',
-        path: '/users',
-        handler: function () {
-            return {};
-        },
-        config: {
-            plugins: {
-                hal: {
-                    api: 'mco:users'
-                }
-            }
+  server.route({
+    method: 'get',
+    path: '/users',
+    handler () {
+      return {}
+    },
+    config: {
+      plugins: {
+        hal: {
+          api: 'mco:users'
         }
-    });
+      }
+    }
+  })
 
-    server.route({
-        method: 'get',
-        path: '/users/{userId}',
-        handler: function () {
-            return {};
-        },
-        config: {
-            plugins: {
-                hal: {
-                    api: 'mco:user'
-                }
-            }
+  server.route({
+    method: 'get',
+    path: '/users/{userId}',
+    handler () {
+      return {}
+    },
+    config: {
+      plugins: {
+        hal: {
+          api: 'mco:user'
         }
-    });
+      }
+    }
+  })
 }
 
 init()
@@ -519,35 +552,40 @@ init()
 
 will auto-create the following api root:
 
-```
+```shell
 curl -H 'Accept: application/hal+json' http://localhost:8080/api/
+```
 
+will produce:
+
+```json
 {
-    "_links": {
-        "self": {
-            "href": "/api/"
-        },
-        "curies": [
-            {
-                "name": "mco",
-                "href": "/rels/mycompany/{rel}",
-                "templated": true
-            }
-        ],
-        "mco:users": {
-            "href": "/users"
-        },
-        "mco:user": {
-            "href": "/users/{userId}",
-            "templated": true
-        }
+  "_links": {
+    "self": {
+      "href": "/api/"
+    },
+    "curies": [
+      {
+        "name": "mco",
+        "href": "/rels/mycompany/{rel}",
+        "templated": true
+      }
+    ],
+    "mco:users": {
+      "href": "/users"
+    },
+    "mco:user": {
+      "href": "/users/{userId}",
+      "templated": true
     }
+  }
 }
 ```
 
 ## Plugin Options
+
 - `strict` - setting this to `true` will cause an exception to be thrown when referencing unregistered local rel. Setting this
-to true will help catch typos during development. Default: `false`
+  to true will help catch typos during development. Default: `false`
 - `relsPath` - the route path to the rels documentation root. Default: `/rels`
 - `relsAuth` - the hapi authentication setting to use for the documentation routes. Default: `false`
 - `relsTemplate` - a boolean true/false. if true, rels documentation uses the default template. Default: `true`
@@ -557,7 +595,7 @@ to true will help catch typos during development. Default: `false`
 - `apiServerLabel` - when set, Halacious will select for a specific server to route the api root.
 - `mediaTypes` - an array of media types that will trigger the hal processor to modify the response (e.g. `['application/json',
 'application/hal+json']`). the media types are checked in order. if any match the accept header parameters, then the
-response will be halified and the media type of the response will be set to the first winner. Default: `['application/hal+json']`
+  response will be halified and the media type of the response will be set to the first winner. Default: `['application/hal+json']`
 - `absolute` - a boolean true/false. if true, all hrefs will include the protocol, server, and port. Default: false
 - `host` - a hostname+port string for all absolute link urls
 - `hostname` - a string hostname for all absolute link urls (only used if host is blank)

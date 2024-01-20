@@ -6,9 +6,10 @@ import hapi from '@hapi/hapi'
 import vision from '@hapi/vision'
 import sinon from 'sinon'
 import sinonChai from '@sequencemedia/sinon-chai'
-import chaiString from 'chai-string'
 import halacious from '#halacious'
-import { plugin } from '#halacious/plugin'
+import {
+  plugin
+} from '#halacious/plugin'
 import _ from 'lodash'
 import url from 'url'
 import IAM from '#where-am-i'
@@ -16,9 +17,8 @@ import IAM from '#where-am-i'
 const should = chai.should()
 
 chai.use(sinonChai)
-chai.use(chaiString)
 
-const PLUGIN = '@modernpoacher/halacious'
+const PLUGIN = 'halacious' // '@modernpoacher/halacious'
 
 describe('Halacious Plugin', () => {
   let server
@@ -35,7 +35,7 @@ describe('Halacious Plugin', () => {
 
   xit('should have a registration function', () => {
     plugin.should.have.property('register')
-    plugin.register.should.be.a('Function')
+    plugin.register.should.be.a('function')
   })
 
   it('should expose a namespace function', (done) => {
@@ -47,7 +47,7 @@ describe('Halacious Plugin', () => {
         } = server
 
         plugin.should.have.property('namespaces')
-        plugin.namespace.should.be.a('Function')
+        plugin.namespace.should.be.a('function')
       })
       .then(done)
       .catch(done)
@@ -70,7 +70,7 @@ describe('Halacious Plugin', () => {
         namespace.should.have.property('name', 'mycompany')
         namespace.should.have.property('prefix', 'mco')
         namespace.should.have.property('rel')
-        namespace.rel.should.be.a('Function')
+        namespace.rel.should.be.a('function')
       })
       .then(done)
       .catch(done)
@@ -1456,7 +1456,7 @@ describe('Halacious Plugin', () => {
           .property('_links')
           .that.has.a.property('self')
           .that.has.a.property('href')
-          .that.endsWith('/people/100?donotbreakthis=true')
+          .and.satisfies(href => href.endsWith('/people/100?donotbreakthis=true'))
       })
       .then(done)
       .catch(done)
