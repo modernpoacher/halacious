@@ -20,3 +20,9 @@
 
 # Deps
 .depsrc
+
+# Development
+examples
+test
+views
+tsconfig.json
