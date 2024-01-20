@@ -6,7 +6,6 @@ import hapi from '@hapi/hapi'
 import vision from '@hapi/vision'
 import sinon from 'sinon'
 import sinonChai from '@sequencemedia/sinon-chai'
-import chaiString from 'chai-string'
 import halacious from '#halacious'
 import {
   plugin
@@ -18,7 +17,6 @@ import IAM from '#where-am-i'
 const should = chai.should()
 
 chai.use(sinonChai)
-chai.use(chaiString)
 
 const PLUGIN = 'halacious' // '@modernpoacher/halacious'
 
@@ -1458,7 +1456,7 @@ describe('Halacious Plugin', () => {
           .property('_links')
           .that.has.a.property('self')
           .that.has.a.property('href')
-          .that.endsWith('/people/100?donotbreakthis=true')
+          .and.satisfies(href => href.endsWith('/people/100?donotbreakthis=true'))
       })
       .then(done)
       .catch(done)
