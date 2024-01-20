@@ -12,7 +12,7 @@ import {
 } from 'marked'
 import url from 'url'
 import URI from 'urijs'
-import urlTemplate from 'url-template'
+import * as urlTemplate from 'url-template'
 import Negotiator from 'negotiator'
 import URITemplate from 'urijs/src/URITemplate.js'
 import IAM from '#where-am-i'
@@ -506,7 +506,7 @@ export const plugin = {
       const resolveHref = function (href, ctx) {
         return _.isFunction(href)
           ? href(rep, ctx)
-          : urlTemplate.parse(href).expand(flattenContext(href, ctx))
+          : urlTemplate.parseTemplate(href).expand(flattenContext(href, ctx))
       }
 
       try {
