@@ -46,7 +46,7 @@ Register the plugin with the app server
 
 ```javascript
 import hapi from '@hapi/hapi'
-import halacious from '#halacious'
+import halacious from '@modernpoacher/halacious'
 
 async function init () {
   const server = hapi.server({ port: 8080 })
@@ -57,13 +57,11 @@ async function init () {
     method: 'get',
     path: '/hello/{name}',
     handler (req) {
-      return { message: 'Hello, '+req.params.name }
+      return { message: 'Hello, ' + req.params.name }
     }
   })
 
   await server.start()
-
-  console.info('Server started at %s', server.info.uri)
 }
 
 init()
@@ -401,7 +399,7 @@ Halacious exposes its api to your Hapi server so that you may configure it at ru
 
 ```javascript
 import hapi from '@hapi/hapi'
-import halacious from '#halacious'
+import halacious from '@modernpoacher/halacious'
 
 async function init () {
   const server = hapi.server({ port: 8080 })
@@ -472,7 +470,7 @@ company's namespace. We can suck all these into the system in one fell swoop:
 
 ```javascript
 import hapi from '@hapi/hapi'
-import halacious from '#halacious'
+import halacious from '@modernpoacher/halacious'
 
 async function init () {
   const server = hapi.server({ port: 8080 })
@@ -505,7 +503,7 @@ configuration option. For example:
 
 ```javascript
 import hapi from '@hapi/hapi'
-import halacious from '#halacious'
+import halacious from '@modernpoacher/halacious'
 
 async function init () {
   const server = hapi.server({ port: 8080 })

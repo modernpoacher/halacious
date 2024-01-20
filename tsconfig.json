@@ -7,5 +7,8 @@
     "strict": true,
     "isolatedModules": true,
     "baseUrl": "."
-  }
+  },
+  "include": [
+    "src"
+  ]
 }

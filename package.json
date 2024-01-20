@@ -10,6 +10,7 @@
   ],
   "main": "./src/index.mjs",
   "type": "module",
+  "types": "./src/index.d.mts",
   "author": {
     "name": "Jonathan Perry for Modern Poacher Limited",
     "email": "modernpoacher@modernpoacher.com",
@@ -40,6 +41,7 @@
     "@hapi/boom": "^10.0.1",
     "@hapi/hoek": "^11.0.4",
     "async": "^3.2.5",
+    "debug": "^4.3.4",
     "joi": "^17.12.0",
     "lodash": "^4.17.21",
     "marked": "^11.1.1",
@@ -51,6 +53,8 @@
   "devDependencies": {
     "@babel/core": "^7.23.7",
     "@babel/eslint-parser": "^7.23.3",
+    "@babel/plugin-syntax-import-assertions": "^7.23.3",
+    "@babel/preset-env": "^7.23.8",
     "@hapi/hapi": "^21.3.2",
     "@hapi/vision": "^7.0.3",
     "@modernpoacher/hooks": "^1.0.457",
@@ -67,6 +71,7 @@
     "sinon": "^17.0.1"
   },
   "imports": {
+    "#package": "./package.json",
     "#halacious/*": "./src/*.mjs",
     "#halacious": "./src/index.mjs",
     "#where-am-i": "./where-am-i.mjs"

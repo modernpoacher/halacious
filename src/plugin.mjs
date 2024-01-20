@@ -1,59 +1,61 @@
+/**
+ * @typedef {import('@modernpoacher/halacious').HalaciousTypes.Representation} Representation
+ */
+
 import joi from 'joi'
 import * as boom from '@hapi/boom'
 import * as hoek from '@hapi/hoek'
-import _ from 'lodash'
-import fs from 'node:fs'
+import {
+  readdirSync,
+  readFileSync
+} from 'node:fs'
 import path from 'node:path'
+import util from 'node:util'
+import url from 'node:url'
+import _ from 'lodash'
 import pug from 'pug'
-import util from 'util'
 import async from 'async'
 import {
   marked
 } from 'marked'
-import url from 'url'
+import debug from 'debug'
 import URI from 'urijs'
 import * as urlTemplate from 'url-template'
-import Negotiator from 'negotiator'
 import URITemplate from 'urijs/src/URITemplate.js'
+
+import PKG from '#package' assert { type: 'json' }
 import IAM from '#where-am-i'
+
 import RepresentationFactory from './representation.mjs'
+
+import {
+  getRepresentationEntity,
+  getRepresentationSelfHref,
+  getRepresentationRequest,
+  getRepresentationRequestPath,
+  getRouteSettingsPluginsHal,
+  getRouteSettingsPluginsHalApi,
+  getRouteSettingsPluginsHalQuery,
+  getRouteSettingsPluginsHalAbsolute,
+  getRouteSettingsIsInternal,
+  hasRoutePath,
+  getRoutePath,
+  getRequestRoute,
+  getRequestHeadersAccept,
+  getRequestServer,
+  getRequestResponse,
+  getRequestResponseSource,
+  getRequestResponseHeadersLocation,
+  getResponseVariety,
+  getResponseStatusCode,
+  isResponseStatusCodeInSuccessRange,
+  getMediaType,
+  getTemplateContext
+} from './utils.mjs'
 
 const HAL_MIME_TYPE = 'application/hal+json'
 
-const REG = /{([^{}]+)}|([^{}]+)/g
-
-const PKG = JSON.parse(fs.readFileSync(path.join(IAM, './package.json')))
-
-function reach (object, path) {
-  const parts = path ? path.split('.') : []
-
-  for (let i = 0; i < parts.length && !_.isUndefined(object); i++) {
-    object = object[parts[i]]
-  }
-
-  return object
-}
-
-/**
- * evaluates and flattens deep expressions (e.g. '/{foo.a.b}') into a single level context object: {'foo.a.b': value}
- * so that it may be used by url-template library
- * @param template
- * @param ctx
- * @return {{}}
- */
-function flattenContext (template, ctx) {
-  let arr
-  const result = {}
-
-  while ((arr = REG.exec(template)) !== null) {
-    if (arr[1]) {
-      const value = reach(ctx, arr[1])
-      result[arr[1]] = value && value.toString()
-    }
-  }
-
-  return result
-}
+const log = debug('@sequencemedia/halacious')
 
 const optionsSchema = joi.object({
   absolute: joi.boolean().default(false),
@@ -80,23 +82,117 @@ const optionsSchema = joi.object({
   marked: joi.object().default({})
 })
 
+// valid rel options
+const relSchema = joi.object({
+  // the rel name, will default to file's basename if available
+  name: joi.string().required(),
+
+  // a path to the rel's documentation in html or markdown
+  file: joi.string().optional(),
+
+  // a short textual description
+  description: joi.string().optional(),
+
+  // returns the qualified name of the rel (including the namespace)
+  qname: joi
+    .function()
+    .optional()
+    .default(function getJoiDefault () {
+      return function joiDefault () {
+        return this.namespace
+          ? util.format('%s:%s', this.namespace.prefix, this.name)
+          : this.name
+      }
+    })
+}).unknown()
+
+// valid namespace options
+const namespaceSchema = joi.object({
+  // the namespace name, will default to dir basename if available
+  name: joi.string().required(),
+
+  // a path to a directory containing rel descriptors. all rels will automatically be added
+  dir: joi.string().optional(),
+
+  // the namespace prefix for shorthand rel addressing (e.g. 'prefix:relname')
+  prefix: joi.string().optional().default(joi.ref('name')),
+
+  // a short description
+  description: joi.string().optional(),
+
+  // a map of rel objects, keyed by name
+  rels: joi.object().optional(),
+
+  // validates and adds a rel to the namespace
+  rel: joi
+    .function()
+    .optional()
+    .default(function getJoiDefault () {
+      return function joiDefault (rel) {
+        this.rels = this.rels || {}
+
+        if (_.isString(rel)) rel = { name: rel }
+
+        rel.name =
+              rel.name ||
+              (rel.file && path.basename(rel.file, path.extname(rel.file)))
+
+        const { error, value } = relSchema.validate(rel)
+        if (error) throw error
+
+        rel = value
+
+        this.rels[rel.name] = rel
+        rel.namespace = this
+
+        return this
+      }
+    }),
+
+  // synchronously scans a directory for rel descriptors and adds them to the namespace
+  scanDirectory: joi
+    .function()
+    .optional()
+    .default(function getJoiDefault () {
+      return function joiDefault (directory) {
+        const files = readdirSync(directory)
+
+        files
+          .forEach(function (file) {
+            this.rel({ file: path.join(directory, file) })
+          }, this)
+
+        return this
+      }
+    })
+})
+
+// see http://tools.ietf.org/html/draft-kelly-json-hal-06#section-8.2
+const linkSchema = joi.object({
+  href: joi.alternatives([joi.string(), joi.function()]).required(),
+  templated: joi.boolean().optional(),
+  title: joi.string().optional(),
+  type: joi.string().optional(),
+  deprecation: joi.string().optional(),
+  name: joi.string().optional(),
+  profile: joi.string().optional(),
+  hreflang: joi.string().optional()
+})
+
 /**
- * Registers plugin routes and an "api" object with the hapi server.
+ * Registers plugin routes and an "api" object with the hapi server
+ *
  * @param server
  * @param opts
- * @param next
+ * @param {(err: Error | null, any) => void} callback
  */
 export const plugin = {
   pkg: PKG,
 
   async register (server, opts) {
-    let settings = opts
-
-    const { error, value } = optionsSchema.validate(opts)
+    const { error, value: settings } = optionsSchema.validate(opts)
 
     if (error) throw error
-
-    settings = value
 
     marked.setOptions(settings.marked)
 
@@ -110,112 +206,495 @@ export const plugin = {
     internals.byName = {}
     internals.byPrefix = {}
 
-    // valid rel options
-    internals.relSchema = joi.object({
-      // the rel name, will default to file's basename if available
-      name: joi.string().required(),
+    // keeps found routes in a cache
+    const routeCache = new Map()
 
-      // a path to the rel's documentation in html or markdown
-      file: joi.string().optional(),
+    /**
+     * Route handler for /rels
+     *
+     * @type {{handler: handler}}
+     */
+    function getRelsRouteConfig (auth) {
+      return {
+        auth,
+        handler ({ path }, h) {
+          return h.view('namespaces', {
+            path,
+            namespaces: internals.namespaces()
+          })
+        }
+      }
+    }
 
-      // a short textual description
-      description: joi.string().optional(),
+    /**
+     * Route handler for /rels/{namespace}/{rel}
+     *
+     * @type {{handler: handler}}
+     */
+    function getRelRouteConfig (auth) {
+      return {
+        auth,
+        handler ({ params: { namespace: namespaceName, rel: relName } }, h) {
+          const rel = internals.rel(namespaceName, relName)
 
-      // returns the qualified name of the rel (including the namespace)
-      qname: joi
-        .function()
-        .optional()
-        .default(function () {
-          return function () {
-            return this.namespace
-              ? util.format('%s:%s', this.namespace.prefix, this.name)
-              : this.name
+          if (!rel) {
+            log(`Invalid rel "${namespaceName}" ("${relName}")`)
+            throw boom.notFound()
+          }
+
+          const {
+            file
+          } = rel
+
+          if (file) {
+            const buffer = readFileSync(file)
+
+            if (settings.relsTemplate) {
+              return h.view('rel', {
+                rel,
+                relData: marked(buffer.toString())
+              })
+            }
+
+            return marked(buffer.toString())
+          }
+
+          return h.view('rel', { rel })
+        }
+      }
+    }
+
+    function isRelativePath (path) {
+      return (
+        path &&
+        (path.substring(0, 2) === './' || path.substring(0, 3) === '../')
+      )
+    }
+
+    /**
+     * Locates a named route. This feature may not belong here
+     *
+     * @param routeName
+     * @return {*}
+     */
+    function getRouteFromRouteCache (routeName) {
+      if (routeCache.has(routeName)) {
+        return routeCache.get(routeName)
+      }
+
+      const route = (
+        server
+          .table()
+          .find((route) => {
+            const {
+              name
+            } = getRouteSettingsPluginsHal(route)
+
+            if (name === routeName) {
+              return route
+            }
+
+            return null
+          })
+      )
+
+      routeCache.set(routeName, route)
+
+      return route
+    }
+
+    /**
+     * Configures a representation with parameters specified by a hapi route config. The configuration object may
+     * include 'links', 'embedded', and 'prepare' properties.
+     *
+     * @param {Representation} representation the representation to configure
+     * @param {Record<string, any>} config the config object
+     * @param {(err: Error | null, any) => void} callback
+     */
+    function configureRepresentation (
+      representation,
+      config,
+      callback
+    ) {
+      function getHref (href, context) {
+        return _.isFunction(href)
+          ? href(representation, context)
+          : urlTemplate.parseTemplate(href).expand(getTemplateContext(href, context))
+      }
+
+      /**
+       * Wraps callback functions to support callback(representation) instead of callback(null, representation)
+       *
+       * @param {(err: Error | null, any) => void} callback
+       * @return {(err: Error | null, any) => void}
+       */
+      function wrap (callback) {
+        return function (err, result) {
+          if (err instanceof Error) {
+            callback(err)
+          } else {
+            callback(null, result || representation)
+          }
+        }
+      }
+
+      /**
+       * @param {Representation} representation the representation to configure
+       * @param {Record<string, any>} config the config object
+       * @param {(err: Error | null, any) => void} callback
+       */
+      function prepareEntity (representation, callback) {
+        const { prepare } = config
+
+        if (_.isFunction(prepare)) {
+          prepare(representation, wrap(callback))
+        } else {
+          callback(null, representation)
+        }
+      }
+
+      /**
+       * @param {Representation} representation the representation to configure
+       * @param {Record<string, any>} config the config object
+       * @param {(err: Error | null, any) => void} callback
+       */
+      function cascadeEntity (representation, { ignore }, callback) {
+        representation.ignore(ignore)
+
+        // cascade the async config functions
+        prepareEntity(representation, callback)
+      }
+
+      try {
+        // shorthand prepare function
+        if (_.isFunction(config)) config = { prepare: config }
+
+        if (Reflect.has(config, 'links')) {
+          const links = Reflect.get(config, 'links')
+
+          const entity = getRepresentationEntity(representation)
+
+          Object.entries(links)
+            .forEach(([rel, link]) => {
+              const representationLink = internals.link(link, getRepresentationSelfHref(representation))
+              representationLink.href = getHref(representationLink.href, entity)
+              representation.link(rel, representationLink)
+
+              // grab query options
+              if (config.query) {
+                representationLink.href += config.query
+              }
+            })
+        }
+
+        if (Reflect.has(config, 'embedded')) {
+          // configure embedded declarations. each rel entry is also a representation config object
+          const embedded = Reflect.get(config, 'embedded')
+
+          const entity = getRepresentationEntity(representation)
+
+          async.each(
+            Object.entries(embedded),
+            ([rel, route], callback) => {
+              // assume that arrays should be embedded as a collection
+              if (!hasRoutePath(route)) {
+                throw new Error(
+                    `Invalid route "${getRepresentationRequestPath(representation)}": "embedded" route configuration property requires a path`
+                )
+              }
+
+              let embedded = hoek.reach(entity, getRoutePath(route))
+
+              if (!embedded) return callback()
+
+              // force the embed array to be inialized. no self rel is necessary
+              if (_.isArray(embedded)) representation.embed(rel, null, [])
+
+              // force into an array for iterating
+              embedded = [].concat(embedded)
+
+              // embedded reps probably also shouldnt appear in the object payload
+              representation.ignore(getRoutePath(route))
+
+              async.each(
+                embedded,
+                (item, callback) => {
+                  const link = internals.link(
+                    getHref(route.href, { self: entity, item }),
+                    getRepresentationSelfHref(representation)
+                  )
+
+                  // create the embedded representation from the possibly templated href
+                  let embedded = representation.embed(rel, link, item)
+
+                  // force into an array for iterating
+                  embedded = [].concat(embedded)
+
+                  // recursively process its links/embedded declarations
+                  async.each(
+                    embedded,
+                    (representation, callback) => {
+                      transformRepresentationEntity(representation, route, callback)
+                    },
+                    callback
+                  )
+                },
+                callback
+              )
+            },
+            (err) => {
+              if (err) return callback(err)
+
+              return (
+                cascadeEntity(representation, config, callback)
+              )
+            }
+          )
+        } else {
+          return (
+            cascadeEntity(representation, config, callback)
+          )
+        }
+      } catch (e) {
+        callback(e)
+      }
+    }
+
+    function transformRepresentationEntity (
+      representation,
+      config,
+      callback
+    ) {
+      /**
+       * Wraps callback functions to support callback(representation) instead of callback(null, representation)
+       *
+       * @param {(err: Error | null, any) => void} callback
+       * @return {(err: Error | null, any) => void}
+       */
+      function wrap (callback) {
+        return function (err, result) {
+          if (err instanceof Error) {
+            callback(err)
+          } else {
+            callback(null, result || representation)
+          }
+        }
+      }
+
+      /**
+       * Looks for a toHal(representation, callback) method on the entity. If found, it is called asynchronously. The method may modify the
+       * representation or pass back a completely new representation by calling callback(newRep)
+       *
+       * @param {(err: Error | null, any) => void} callback
+       */
+      function transformEntity (callback) {
+        const { entity: { toHal } } = representation
+
+        if (_.isFunction(toHal)) {
+          toHal(representation, wrap(callback))
+        } else {
+          callback(null, representation)
+        }
+      }
+
+      async.waterfall(
+        [
+          transformEntity,
+          (representation, callback) => {
+            configureRepresentation(representation, config, callback)
+          }
+        ],
+        callback
+      )
+    }
+
+    /**
+     * Expands the query string template, if present, using query parameter values in the request
+     *
+     * @param request
+     * @param queryTemplate
+     * @param {boolean} isAbsolute whether the link should be expanded to include the server
+     * @return {*}
+     */
+    function getRequestPath (request, queryTemplate, isAbsolute) {
+      const path = isAbsolute
+        ? internals.buildUrl(request, request.path)
+        : request.path
+
+      if (queryTemplate) {
+        const uriTemplate = new URITemplate(path + queryTemplate)
+        return (
+          uriTemplate.expand(request.query)
+        )
+      }
+
+      return path
+    }
+
+    /**
+     * Resolves to a relative URL
+     *
+     * @param request
+     * @param {string} uri
+     * @param {boolean} isAbsolute
+     * @return {*}
+     */
+    function getRelativeUrl (request, uri, isAbsolute) {
+      let relativeUrl = null
+      let queryParams = null
+
+      if (uri.match(/^\w+:\/\//)) {
+        relativeUrl = uri
+      } else {
+        const [
+          route = '',
+          query = null
+        ] = uri.split('?')
+
+        relativeUrl = route.charAt(0) === '/' ? route : '/' + route
+        queryParams = query || queryParams
+      }
+
+      if (isAbsolute) {
+        relativeUrl = internals.buildUrl(request, relativeUrl, queryParams)
+      }
+
+      return relativeUrl
+    }
+
+    function isAcceptHeaderValid (request) {
+      return (
+        !settings.requireHalJsonAcceptHeader ||
+        (getRequestHeadersAccept(request) ?? '').toLowerCase().includes(HAL_MIME_TYPE)
+      )
+    }
+
+    function isSourceEligible (source) {
+      return _.isObject(source) && !_.isArray(source)
+    }
+
+    function isRequestEligible (request) {
+      return (
+        !getRouteSettingsIsInternal(getRequestRoute(request)) && // hapi 9/10 routes can be marked internal only
+        isAcceptHeaderValid(request) &&
+        internals.filter(request)
+      )
+    }
+
+    function isResponseEligible (response) {
+      return (
+        getResponseVariety(response) === 'plain' &&
+        isResponseStatusCodeInSuccessRange(getResponseStatusCode(response))
+      )
+    }
+
+    function isEligible (request) {
+      return (
+        isRequestEligible(request) &&
+        isResponseEligible(getRequestResponse(request)) &&
+        isSourceEligible(getRequestResponseSource(request))
+      )
+    }
+
+    /**
+     * Prepares a hal response with all root "api" handlers declared in the routing table. Api handlers are identified with
+     * the plugins.hal.api configuration settings. This function is exported for convenience if the developer wishes to
+     * define his or her own api handler in order to include metadata in the payload
+     *
+     * @param {boolean} isAbsolute
+     * @param {Representation} representation
+     * @param {(err: Error | null, any) => void} callback
+     */
+    function toHal (isAbsolute, representation, callback) {
+      const request = getRepresentationRequest(representation)
+
+      // grab the routing table and iterate
+      const server = getRequestServer(request)
+
+      server.table()
+        .forEach((route) => {
+          const api = getRouteSettingsPluginsHalApi(route)
+
+          if (api) {
+            let {
+              path: uri = ''
+            } = route
+
+            if (isAbsolute) {
+              uri = internals.buildUrl(request, uri)
+            }
+
+            const query = getRouteSettingsPluginsHalQuery(route)
+
+            // grab query options
+            if (query) {
+              uri += query
+            }
+
+            representation.link(api, uri)
           }
         })
-    }).unknown()
 
-    // valid namespace options
-    internals.nsSchema = joi.object({
-      // the namespace name, will default to dir basename if available
-      name: joi.string().required(),
+      callback()
+    }
 
-      // a path to a directory containing rel descriptors. all rels will automatically be added
-      dir: joi.string().optional(),
+    /**
+     * Creates an auto api route configuration
+     *
+     * @param auth
+     * @param {boolean} isAbsolute
+     * @return {{auth: *, handler: handler, plugins: {hal: toHal}}}
+     */
+    function getApiRouteConfig (auth, isAbsolute) {
+      return {
+        auth,
+        handler (req, h) {
+          return h.response({}).type(HAL_MIME_TYPE)
+        },
+        plugins: {
+          hal: toHal.bind(null, isAbsolute)
+        }
+      }
+    }
 
-      // the namespace prefix for shorthand rel addressing (e.g. 'prefix:relname')
-      prefix: joi.string().optional().default(joi.ref('name')),
-
-      // a short description
-      description: joi.string().optional(),
-
-      // a map of rel objects, keyed by name
-      rels: joi.object().optional(),
-
-      // validates and adds a rel to the namespace
-      rel: joi
-        .function()
-        .optional()
-        .default(function () {
-          return function (rel) {
-            this.rels = this.rels || {}
-
-            if (_.isString(rel)) rel = { name: rel }
-
-            rel.name =
-              rel.name ||
-              (rel.file && path.basename(rel.file, path.extname(rel.file)))
-
-            const { error, value } = internals.relSchema.validate(rel)
-            if (error) throw error
-
-            rel = value
-
-            this.rels[rel.name] = rel
-            rel.namespace = this
-            return this
-          }
-        }),
-
-      // synchronously scans a directory for rel descriptors and adds them to the namespace
-      scanDirectory: joi
-        .function()
-        .optional()
-        .default(function () {
-          return function (directory) {
-            const files = fs.readdirSync(directory)
-            files.forEach(function (file) {
-              this.rel({ file: path.join(directory, file) })
-            }, this)
-
-            return this
-          }
-        })
-    })
-
-    internals.filter = function (request) {
-      return _.get(request.route.settings, 'plugins.hal', true)
+    /**
+     * Creates a redirector to redirect the browser from /api to /api/
+     *
+     * @param auth
+     * @param {string} url
+     * @return {{auth: *, handler: handler}}
+     */
+    function getApiRedirectConfig (auth, url) {
+      return {
+        auth,
+        handler (req, h) {
+          return h.redirect(url.concat('/'))
+        }
+      }
     }
 
     /**
      * Returns a list of all registered namespaces sorted by name
+     *
      * @return {*}
      */
-    internals.namespaces = function () {
-      return _.sortBy(_.values(internals.byName), 'name')
+    internals.namespaces = function namespaces () {
+      return _.sortBy(Object.values(internals.byName), 'name')
     }
 
     /**
      * Validates and adds a new namespace configuration
+     *
      * @param namespace the namespace config
      * @return {*} a new namespace object
      */
-    internals.namespaces.add = function (namespace) {
+    internals.namespaces.add = function add (namespace) {
       // if only dir is specified
       namespace.name =
         namespace.name || (namespace.dir && path.basename(namespace.dir))
 
       // fail fast if the namespace isnt valid
-      const { error, value } = internals.nsSchema.validate(namespace)
+      const { error, value } = namespaceSchema.validate(namespace)
 
       if (error) throw error
 
@@ -237,18 +716,17 @@ export const plugin = {
 
     /**
      * Removes one or all registered namespaces. Mainly used for testing
-     * @param {String=} namespace the namespace to remove. a falsy value will remove all namespaces
+     *
+     * @param {string} name the namespace to remove. a falsy value will remove all namespaces
      */
-    internals.namespaces.remove = function (namespace) {
-      let ns
-
-      if (!namespace) {
+    internals.namespaces.remove = function remove (name) {
+      if (!name) {
         internals.byName = {}
         internals.byPrefix = {}
       } else {
-        ns = internals.byName[namespace]
-        if (ns) {
-          delete internals.byName[namespace]
+        const namespace = internals.byName[name]
+        if (namespace) {
+          delete internals.byName[name]
           delete internals.byPrefix[namespace.prefix]
         }
       }
@@ -256,74 +734,80 @@ export const plugin = {
 
     /**
      * Looks up a specific namespace
+     *
      * @param namespace
      * @return {*}
      */
-    internals.namespace = function (namespace) {
-      return internals.byName[namespace]
+    internals.namespace = function namespace (name) {
+      return internals.byName[name]
     }
 
     /**
      * Sorts and returns all rels by namespace
+     *
      * @return {*}
      */
-    internals.rels = function () {
-      let rels = []
-      _.values(internals.byName).forEach((ns) => {
-        rels = rels.concat(_.values(ns.rels) || [])
-      })
+    internals.rels = function rels () {
+      const rels = (
+        Object
+          .values(internals.byName)
+          .reduce((accumulator, { rels = {} }) => accumulator.concat(Object.values(rels)), [])
+      )
+
       return _.sortBy(rels, 'name')
     }
 
     /**
      * Adds a new rel configuration to a namespace
-     * @param {String} namespace the namespace name
+     *
+     * @param {string} name the namespace name
      * @param rel the rel configuration
      * @return the new rel
      */
-    internals.rels.add = function (namespace, rel) {
-      const ns = internals.byName[namespace]
-      if (!ns) throw new Error(`Invalid namespace ${namespace}`)
-      ns.rel(rel)
-      return ns.rels[rel.name]
+    internals.rels.add = function add (name, rel) {
+      const namespace = internals.byName[name]
+      if (!namespace) throw new Error(`Invalid namespace "${name}"`)
+
+      namespace.rel(rel)
+      return namespace.rels[rel.name]
     }
 
     /**
      * Looks up a rel under a given namespace
-     * @param {String} namespace the namespace name
-     * @param {String} name the rel name
+     * @param {string} namespaceName the namespace name
+     * @param {string} relName the rel name
      * @return {*} the rel or undefined if not found
      */
-    internals.rel = function (namespace, name) {
-      let parts, ns, rel
+    internals.rel = function rel (namespaceName, relName) {
+      let namespace, rel
 
-      if (!name) {
+      if (!relName) {
         // for shorthand namespace:rel notation
-        if (namespace.indexOf(':') > 0) {
-          parts = namespace.split(':')
-          ns = internals.byPrefix[parts[0]]
-          name = parts[1]
+        if (namespaceName.includes(':')) {
+          const [prefix, name] = namespaceName.split(':')
+          namespace = internals.byPrefix[prefix]
+          relName = name
         }
       } else {
-        ns = internals.byName[namespace]
+        namespace = internals.byName[namespaceName]
       }
 
       // namespace is valid, check for rel
-      if (ns) {
-        if (ns.rels[name]) {
+      if (namespace) {
+        if (namespace.rels[relName]) {
           // rel has been defined
-          rel = ns.rels[name]
+          rel = namespace.rels[relName]
         } else if (!settings.strict) {
           // lazily create the rel
-          ns.rel({ name })
-          rel = ns.rels[name]
+          namespace.rel({ name: relName })
+          rel = namespace.rels[relName]
         } else {
           // could be a typo, fail fast to let the developer know
-          throw new Error(`No such rel: "${namespace}"`)
+          throw new Error(`Invalid rel "${namespaceName}"`)
         }
       } else {
         // could be globally qualified (e.g. 'self')
-        const { error, value } = internals.relSchema.validate({ name: namespace })
+        const { error, value } = relSchema.validate({ name: namespaceName })
         if (error) throw error
 
         rel = value
@@ -333,155 +817,81 @@ export const plugin = {
     }
 
     /**
-     * Route handler for /rels
-     * @type {{handler: handler}}
-     */
-    internals.namespacesRoute = function (relsAuth) {
-      return {
-        auth: relsAuth,
-        handler (req, h) {
-          return h.view('namespaces', {
-            path: req.path,
-            namespaces: internals.namespaces()
-          })
-        }
-      }
-    }
-
-    /**
-     * Route handler for /rels/{namespace}/{rel}
-     * @type {{handler: handler}}
-     */
-    internals.relRoute = function (relsAuth) {
-      return {
-        auth: relsAuth,
-        handler (req, h) {
-          const rel = internals.rel(req.params.namespace, req.params.rel)
-          if (!rel) {
-            console.warn('rel not found!')
-            throw boom.notFound()
-          }
-
-          if (rel.file) {
-            const data = fs.readFileSync(rel.file)
-            if (settings.relsTemplate) {
-              return h.view('rel', {
-                rel,
-                relData: marked(data.toString())
-              })
-            }
-            return marked(data.toString())
-          }
-          return h.view('rel', { rel })
-        }
-      }
-    }
-
-    // see http://tools.ietf.org/html/draft-kelly-json-hal-06#section-8.2
-    internals.linkSchema = joi.object({
-      href: joi.alternatives([joi.string(), joi.function()]).required(),
-      templated: joi.boolean().optional(),
-      title: joi.string().optional(),
-      type: joi.string().optional(),
-      deprecation: joi.string().optional(),
-      name: joi.string().optional(),
-      profile: joi.string().optional(),
-      hreflang: joi.string().optional()
-    })
-
-    internals.isRelativePath = function (path) {
-      return (
-        path &&
-        (path.substring(0, 2) === './' || path.substring(0, 3) === '../')
-      )
-    }
-
-    /**
      * Resolves a name
+     *
      * @param link
      * @param relativeTo
      */
     internals.link = function (link, relativeTo) {
-      relativeTo = relativeTo && relativeTo.split('?')[0]
-      link =
+      link = (
         _.isFunction(link) || _.isString(link)
           ? { href: link }
           : hoek.clone(link)
-      const { error, value } = internals.linkSchema.validate(link)
+      )
+
+      const { error, value } = linkSchema.validate(link)
 
       if (error) throw error
+
       link = value
+
+      /**
+       *  Isn't this just a substring match? Wut
+       */
+      relativeTo = (relativeTo ?? '').split('?').shift().trim()
 
       if (
         relativeTo &&
-        (internals.isRelativePath(link.href) || settings.absolute)
+        (isRelativePath(link.href) || settings.absolute)
       ) {
         try {
-          link.href = new URI(link.href)
-            .absoluteTo(`${relativeTo}/`)
-            .toString()
+          link.href = (
+            new URI(link.href)
+              .absoluteTo(relativeTo.concat('/'))
+              .toString()
+          )
         } catch (e) {
-          console.warn(e)
+          log(`Invalid URL "${link.href}"`)
           return link
         }
       }
+
       return link
-    }
-
-    // keeps found routes in a cache
-    internals.routeCache = {}
-
-    /**
-     * Locates a named route. This feature may not belong here
-     * @param routeName
-     * @return {*}
-     */
-    internals.locateRoute = function (routeName) {
-      if (internals.routeCache[routeName]) {
-        return internals.routeCache[routeName].path
-      }
-
-      const routes = server.table()
-
-      routes.forEach((route) => {
-        if (
-          route.settings.plugins.hal &&
-          route.settings.plugins.hal.name === routeName
-        ) {
-          internals.routeCache[routeName] = route
-        }
-      })
-
-      return internals.routeCache[routeName]
     }
 
     /**
      * Locates a named route and expands templated parameters
-     * @param routeId
+     *
+     * @param routeName
      * @param params
      * @return String the expanded path to the named route
      */
-    internals.route = function (routeId, params) {
-      const route = server.lookup(routeId) || internals.locateRoute(routeId)
-      if (!route) throw new Error(`No route found with id or name ${routeId}`)
-      const href = _.template(route.path, {
-        interpolate: /{([\s\S]+?)(?:\?|\*\d*)??}/g
-      })(
-        _.mapValues(params, (val) =>
-          typeof val !== 'object' ? encodeURIComponent(val) : val
-        )
-      )
-      const query = hoek.reach(route.settings, 'plugins.hal.query')
-      return query ? href + query : href
+    internals.route = function route (routeName, params) {
+      const route = server.lookup(routeName) || getRouteFromRouteCache(routeName)
+      if (!route) throw new Error(`Invalid route "${routeName}"`)
+
+      const i = /{([\s\S]+?)(?:\?|\*\d*)??}/g
+      const c = Object.fromEntries(Object.entries(params).map(([key, value]) => [key, typeof value !== 'object' ? encodeURIComponent(value) : value]))
+
+      const href = _.template(getRoutePath(route), { interpolate: i })(c)
+
+      const query = getRouteSettingsPluginsHalQuery(route) // hoek.reach(route.settings, 'plugins.hal.query')
+
+      if (query) {
+        return href + query
+      }
+
+      return href
     }
 
     /**
      * Returns the documentation link to a namespace
+     *
      * @param request
      * @param namespace
      * @return {*}
      */
-    internals.namespaceUrl = function (request, namespace) {
+    internals.namespaceUrl = function namespaceUrl (request, namespace) {
       const path = [settings.relsPath, namespace.name].join('/')
 
       if (settings.absolute) {
@@ -491,378 +901,42 @@ export const plugin = {
       return path
     }
 
-    /**
-     * Configures a representation with parameters specified by a hapi route config. The configuration object may
-     * include 'links', 'embedded', and 'prepare' properties.
-     * @param {Representation} rep the representation to configure
-     * @param {{}} config the config object
-     * @param callback
-     */
-    internals.configureRepresentation = function configureRepresentation (
-      rep,
-      config,
-      callback
-    ) {
-      const resolveHref = function (href, ctx) {
-        return _.isFunction(href)
-          ? href(rep, ctx)
-          : urlTemplate.parseTemplate(href).expand(flattenContext(href, ctx))
-      }
-
-      try {
-        const { entity } = rep
-
-        // shorthand prepare function
-        if (_.isFunction(config)) config = { prepare: config }
-
-        // configure links
-        _.forEach(config.links, (link, rel) => {
-          const repLink = internals.link(link, rep.self.href)
-          repLink.href = resolveHref(repLink.href, entity)
-          rep.link(rel, repLink)
-
-          // grab query options
-          if (config.query) {
-            repLink.href += config.query
-          }
-        })
-
-        /**
-         * Wraps callback functions to support next(rep) instead of next(null, rep)
-         * @param callback
-         * @return {Function}
-         */
-        const wrap = function (callback) {
-          return function (err, result) {
-            if (err instanceof Error) {
-              callback(err)
-            } else {
-              callback(null, result || rep)
-            }
-          }
-        }
-
-        /**
-         * Looks for an asynchronous prepare method for programmatic configuration of the outbound hal entity. As with
-         * toHal(), the prepare method can modify the existing rep or create an entirely new one.
-         * @param rep
-         * @param callback
-         */
-        const prepareEntity = function (rep, callback) {
-          if (_.isFunction(config.prepare)) {
-            config.prepare(rep, wrap(callback))
-          } else {
-            callback(null, rep)
-          }
-        }
-
-        // configure embedded declarations. each rel entry is also a representation config object
-        async.each(
-          Object.keys(config.embedded || {}),
-          (rel, cb) => {
-            const embed = config.embedded[rel]
-
-            // assume that arrays should be embedded as a collection
-            if (!embed.path) {
-              throw new Error(
-                `Error in route ${rep.request.path}: "embedded" route configuration property requires a path`
-              )
-            }
-            let embedded = hoek.reach(entity, embed.path)
-            if (!embedded) return cb()
-
-            // force the embed array to be inialized. no self rel is necessary
-            if (_.isArray(embedded)) rep.embed(rel, null, [])
-
-            // force into an array for iterating
-            embedded = [].concat(embedded)
-
-            // embedded reps probably also shouldnt appear in the object payload
-            rep.ignore(embed.path)
-
-            async.each(
-              embedded,
-              (item, acb) => {
-                const link = internals.link(
-                  resolveHref(embed.href, { self: entity, item }),
-                  rep.self.href
-                )
-
-                // create the embedded representation from the possibly templated href
-                let embeddedRep = rep.embed(rel, link, item)
-
-                embeddedRep = _.isArray(embeddedRep)
-                  ? embeddedRep
-                  : [embeddedRep]
-                // recursively process its links/embedded declarations
-                async.each(
-                  embeddedRep,
-                  (e, bcb) => {
-                    internals.halifyAndConfigure(e, embed, bcb)
-                  },
-                  acb
-                )
-              },
-              cb
-            )
-          },
-          (err) => {
-            if (err) return callback(err)
-
-            rep.ignore(config.ignore)
-
-            // cascade the async config functions
-            prepareEntity(rep, callback)
-          }
-        )
-      } catch (e) {
-        callback(e)
-      }
-    }
-
-    internals.halifyAndConfigure = function (rep, config, callback) {
-      /**
-       * Wraps callback functions to support next(rep) instead of next(null, rep)
-       * @param callback
-       * @return {Function}
-       */
-      const wrap = function (callback) {
-        return function (err, result) {
-          if (err instanceof Error) {
-            callback(err)
-          } else {
-            callback(null, result || rep)
-          }
-        }
-      }
-
-      /**
-       * Looks for a toHal(representation, next) method on the entity. If found, it is called asynchronously. The method may modify the
-       * representation or pass back a completely new representation by calling next(newRep)
-       * @param callback
-       */
-      const convertEntity = function (callback) {
-        if (_.isFunction(rep.entity.toHal)) {
-          rep.entity.toHal(rep, wrap(callback))
-        } else {
-          callback(null, rep)
-        }
-      }
-
-      const configureEntity = function (rep, callback) {
-        internals.configureRepresentation(rep, config, callback)
-      }
-
-      async.waterfall([convertEntity, configureEntity], callback)
-    }
-
-    /**
-     * Selects the media type based on the request's Accept header and a ranked ordering of configured
-     * media types.
-     * @param mediaTypes
-     * @param request
-     * @return {*}
-     */
-    internals.getMediaType = function (mediaTypes, request) {
-      return new Negotiator(request).mediaType(
-        _.isArray(mediaTypes) ? mediaTypes : [mediaTypes]
-      )
+    internals.filter = function filter (request) {
+      return getRouteSettingsPluginsHal(getRequestRoute(request)) // _.get(getRouteSettings(getRequestRoute(request)), 'plugins.hal', true)
     }
 
     /**
      * Expands the url path to include protocol://server:port
+     *
      * @param request
-     * @param path
-     * @param search
+     * @param {string} pathname
+     * @param {string | void} search
      * @return {*}
      */
-    internals.buildUrl = function (request, path, search) {
+    internals.buildUrl = function buildUrl (request, pathname, search) {
       return url.format({
-        host: settings.host || request.headers.host,
-        hostname: settings.hostname || request.info.host,
-        port: settings.port || request.info.port,
-        pathname: path,
         protocol: settings.protocol || request.info.protocol || 'http',
+        hostname: settings.hostname || request.info.host,
+        pathname,
+        host: settings.host || request.headers.host,
+        port: settings.port || request.info.port,
         search
       })
     }
 
     /**
-     * Expands the query string template, if present, using query parameter values in the request.
-     * @param request
-     * @param queryTemplate
-     * @param { boolean } absolute whether the link should be expanded to include the server
-     * @return {*}
-     */
-    internals.getRequestPath = function (request, queryTemplate, absolute) {
-      let uriTemplate
-
-      const path = absolute
-        ? internals.buildUrl(request, request.path)
-        : request.path
-
-      if (queryTemplate) {
-        uriTemplate = new URITemplate(path + queryTemplate)
-        return uriTemplate.expand(request.query)
-      }
-      return path
-    }
-
-    /**
-     * Resolves a relative url. Borrowed from hapi
-     * @param request
-     * @param uri
-     * @param absolute
-     * @return {*}
-     */
-    internals.location = function (request, uri, absolute) {
-      const isAbsolute = uri.match(/^\w+:\/\//)
-
-      let path = isAbsolute ? uri : (uri.charAt(0) === '/' ? '' : '/') + uri
-      let search = null
-
-      if (isAbsolute) {
-        path = uri
-      } else {
-        const parts = uri.split('?')
-        path = (parts[0].charAt(0) === '/' ? '' : '/') + parts[0]
-        if (parts.length > 1) {
-          // eslint-disable-next-line prefer-destructuring
-          search = parts[1]
-        }
-      }
-
-      if (absolute) {
-        path = internals.buildUrl(request, path, search)
-      }
-      return path
-    }
-
-    internals.successfulResponseCode = function (statusCode) {
-      return statusCode >= 200 && statusCode < 300
-    }
-
-    internals.isSourceEligible = function (source) {
-      return _.isObject(source) && !_.isArray(source)
-    }
-
-    internals.isAcceptHeaderValid = function (request) {
-      const accept = request.headers.accept || ''
-
-      return (
-        !settings.requireHalJsonAcceptHeader ||
-        accept.toLowerCase().indexOf(HAL_MIME_TYPE) >= 0
-      )
-    }
-
-    internals.isRequestEligible = function (request) {
-      // hapi 9/10 routes can be marked internal only
-      return (
-        !request.route.settings.isInternal &&
-        internals.isAcceptHeaderValid(request) &&
-        internals.filter(request)
-      )
-    }
-
-    internals.isResponseEligible = function (response) {
-      return (
-        response.variety === 'plain' &&
-        internals.successfulResponseCode(response.statusCode)
-      )
-    }
-
-    internals.shouldHalify = function (request) {
-      return (
-        internals.isRequestEligible(request) &&
-        internals.isResponseEligible(request.response) &&
-        internals.isSourceEligible(request.response.source)
-      )
-    }
-
-    /**
-     * Prepares a hal response with all root "api" handlers declared in the routing table. Api handlers are identified with
-     * the plugins.hal.api configuration settings. This function is exported for convenience if the developer wishes to
-     * define his or her own api handler in order to include metadata in the payload
+     * Assigns a filter function to test routes before applying the hal interceptor
      *
-     * @param absolute
-     * @param rep
-     * @param next
+     * @param filter
      */
-    internals.apiLinker = function (absolute, rep, next) {
-      // grab the routing table and iterate
-      const req = rep.request
-
-      const routes = req.server.table()
-
-      for (let i = 0; i < routes.length; i++) {
-        const route = routes[i]
-
-        const halConfig = route.settings.plugins.hal || {}
-
-        if (halConfig.api) {
-          const rel = halConfig.api
-          let href = routes[i].path
-
-          if (absolute) {
-            href = internals.buildUrl(rep.request, href)
-          }
-
-          // grab query options
-          if (halConfig.query) {
-            href += halConfig.query
-          }
-
-          rep.link(rel, href)
-        }
-      }
-      next()
-    }
-
-    /**
-     * Creates an auto api route configuration
-     * @param absolute
-     * @param apiAuth
-     * @return {{auth: *, handler: handler, plugins: {hal: apiLinker}}}
-     */
-    internals.apiRouteConfig = function (absolute, apiAuth) {
-      return {
-        auth: apiAuth,
-        handler (req, h) {
-          return h.response({}).type(HAL_MIME_TYPE)
-        },
-        plugins: {
-          hal: internals.apiLinker.bind(null, absolute)
-        }
-      }
-    }
-
-    /**
-     * Creates a redirector to redirect the browser from /api to /api/
-     * @param apiUrl
-     * @param apiAuth
-     * @return {{auth: *, handler: handler}}
-     */
-    internals.apiRedirectConfig = function (apiUrl, apiAuth) {
-      return {
-        auth: apiAuth,
-        handler (req, h) {
-          return h.redirect(`${apiUrl}/`)
-        }
-      }
-    }
-
-    /**
-     * Assigns a filter function to test routes before applying the hal interceptor.
-     * @param filterFn
-     */
-    internals.setFilter = function (filterFn) {
-      const { error } = joi.function().validate(filterFn)
+    internals.setFilter = function setFilter (filter) {
+      const { error } = joi.function().validate(filter)
       if (error) throw error
 
-      internals.filter = filterFn
+      internals.filter = filter
     }
 
-    internals.setUrlBuilder = function (urlBuilder) {
+    internals.setUrlBuilder = function setUrlBuilder (urlBuilder) {
       const { error } = joi.function().validate(urlBuilder)
       if (error) throw error
 
@@ -876,58 +950,60 @@ export const plugin = {
       link: internals.link,
       rels: internals.rels,
       rel: internals.rel,
-      resolve: internals.resolve,
       route: internals.route,
-      apiLinker: internals.apiLinker,
+      toHal,
       filter: internals.setFilter,
       urlBuilder: internals.setUrlBuilder,
-      configureRepresentation: internals.configureRepresentation
+      configureRepresentation
     }
 
     /**
-     * A hapi lifecycle method that looks for the application/hal+json accept header and wraps the response entity into a
+     * A Hapi lifecycle method that looks for the application/hal+json accept header and wraps the response entity into a
      * HAL representation
+     *
      * @param request
      * @param h
      */
-    internals.postHandler = function (request, h) {
-      let rf, halConfig, entity, rep, self
-      const mediaType = internals.getMediaType(settings.mediaTypes, request)
-      let absolute
+    internals.postHandler = function postHandler (request, h) {
+      if (isEligible(request)) {
+        const mediaType = getMediaType(request, settings.mediaTypes)
+        if (mediaType) {
+          // all new representations for the request will be built by this guy
+          const representationFactory = new RepresentationFactory(api, request)
 
-      if (mediaType && internals.shouldHalify(request)) {
-        halConfig = request.route.settings.plugins.hal || {}
+          // e.g. honor the location header if it has been set using response.created(...) or response.location(...)
+          const location = getRequestResponseHeadersLocation(request)
+          const isAbsolute = getRouteSettingsPluginsHalAbsolute(getRequestRoute(request)) || settings.absolute
 
-        // all new representations for the request will be built by this guy
-        rf = new RepresentationFactory(api, request)
+          const self = (
+            location
+              ? getRelativeUrl(request, location, isAbsolute)
+              : getRequestPath(request, getRouteSettingsPluginsHalQuery(getRequestRoute(request)), isAbsolute)
+          )
 
-        entity = request.response.source
+          const representation = representationFactory.create(getRequestResponseSource(request), self)
 
-        absolute = halConfig.absolute || settings.absolute
+          return (
+            new Promise((resolve, reject) => {
+              transformRepresentationEntity(representation, getRouteSettingsPluginsHal(getRequestRoute(request)), (err, representation) => {
+                if (err) {
+                  return reject(err)
+                }
 
-        // e.g. honor the location header if it has been set using response.created(...) or response.location(...)
-        const { location } = request.response.headers
-        self = location
-          ? internals.location(request, location, absolute)
-          : internals.getRequestPath(request, halConfig.query, absolute)
+                const response = getRequestResponse(request)
 
-        rep = rf.create(entity, self)
+                // send back what they asked for (as plain object
+                // so validation can be done correctly)
+                response.source = representation.toJSON()
+                response.type(mediaType)
 
-        return new Promise((resolve, reject) => {
-          internals.halifyAndConfigure(rep, halConfig, (err, rep) => {
-            if (err) {
-              return reject(err)
-            }
-
-            // send back what they asked for, as plain object
-            // so validation can be done correctly
-            request.response.source = rep.toJSON()
-            request.response.type(mediaType)
-
-            return resolve(h.continue)
-          })
-        })
+                return resolve(h.continue)
+              })
+            })
+          )
+        }
       }
+
       return h.continue
     }
 
@@ -940,24 +1016,27 @@ export const plugin = {
       // bind the API handler to api root + '/'. Ending with '/' is necessary for resolving relative links on the client
       selection.route({
         method: 'GET',
-        path: `${settings.apiPath}/`,
-        config: internals.apiRouteConfig(settings.absolute, settings.apiAuth)
+        path: settings.apiPath.concat('/'),
+        config: getApiRouteConfig(
+          settings.apiAuth,
+          settings.absolute
+        )
       })
 
       // set up a redirect to api root + '/'
-      if (settings.apiPath.length > 0) {
+      if (settings.apiPath) {
         selection.route({
           method: 'GET',
           path: settings.apiPath,
-          config: internals.apiRedirectConfig(
-            settings.apiPath,
-            settings.apiAuth
+          config: getApiRedirectConfig(
+            settings.apiAuth,
+            settings.apiPath
           )
         })
       }
     }
 
-    internals.preStart = function (server) {
+    internals.preStart = function preStart (server) {
       if (_.isFunction(server.views)) {
         server.views({
           engines: {
@@ -966,15 +1045,17 @@ export const plugin = {
           path: path.join(IAM, './views'),
           isCached: false
         })
+
         server.route({
-          method: 'get',
+          method: 'GET',
           path: settings.relsPath,
-          config: internals.namespacesRoute(settings.relsAuth)
+          config: getRelsRouteConfig(settings.relsAuth)
         })
+
         server.route({
-          method: 'get',
+          method: 'GET',
           path: `${settings.relsPath}/{namespace}/{rel}`,
-          config: internals.relRoute(settings.relsAuth)
+          config: getRelRouteConfig(settings.relsAuth)
         })
       }
     }
