@@ -1,15 +1,18 @@
-require('module-alias/register')
-
 const hapi = require('@hapi/hapi')
 const vision = require('@hapi/vision')
-const halacious = require('halacious')
+const halacious = require('#halacious')
 
 async function init () {
   const server = hapi.server({ port: 8080 })
 
   await server.register(vision)
 
-  await server.register({ plugin: halacious, options: { absolute: true } })
+  await server.register({
+    plugin: halacious,
+    options: {
+      mediaTypes: ['application/json', 'application/hal+json']
+    }
+  })
 
   server.route({
     method: 'get',
@@ -18,21 +21,16 @@ async function init () {
       return {
         id: req.params.userId,
         name: `User ${req.params.userId}`,
-        boss: {
-          id: 1234,
-          name: 'Boss Man'
-        }
+        googlePlusId: '107835557095464780852'
       }
     },
     config: {
       plugins: {
         hal: {
-          embedded: {
-            boss: {
-              path: 'boss', // the property name of the object to embed
-              href: '../{item.id}'
-            }
-          }
+          links: {
+            home: 'http://plus.google.com/{googlePlusId}'
+          },
+          ignore: 'googlePlusId' // remove the id property from the response
         }
       }
     }

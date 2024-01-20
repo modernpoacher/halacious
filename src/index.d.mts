@@ -1,4 +1,12 @@
-declare namespace halacious {
+declare namespace HalaciousTypes {
+  export interface Collection {
+    uid: string
+  }
+
+  export interface Member {
+    uid: string
+  }
+
   export interface Representation {
     request: {
       route: {
@@ -11,14 +19,12 @@ declare namespace halacious {
       }
     }
     entity: {
-      collections?: Array<{ uid: string }>
-      members?: Array<{ uid: string }>
+      collections?: Collection[]
+      members?: Member[]
     }
     ignore: (v: string) => void
     embed: (v: string, u: string, m: object) => void
   }
 }
 
-declare module '@modernpoacher/halacious' {
-  export const plugin: object
-}
+export default HalaciousTypes

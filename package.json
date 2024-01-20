@@ -1,6 +1,6 @@
 {
   "name": "@modernpoacher/halacious",
-  "version": "6.2.4",
+  "version": "7.0.0",
   "description": "A HAL processor for Hapi",
   "keywords": [
     "HAL",
@@ -8,11 +8,15 @@
     "hypermedia",
     "HATEOAS"
   ],
-  "main": "./index.js",
-  "types": "./types/index.d.ts",
-  "author": "Brad Leupen",
+  "main": "./src/index.mjs",
+  "type": "module",
+  "author": {
+    "name": "Jonathan Perry for Modern Poacher Limited",
+    "email": "modernpoacher@modernpoacher.com",
+    "url": "http://modernpoacher.com"
+  },
   "contributors": [
-    "Jonathan Perry <modernpoacher@modernpoacher.com> (Modern Poacher Limited)"
+    "Brad Leupen"
   ],
   "license": "MIT",
   "engines": {
@@ -27,45 +31,46 @@
     "url": "https://github.com/modernpoacher/halacious/issues"
   },
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint . --ext .mjs,.cjs,.mts,.cts",
     "lint:fix": "npm run lint -- --fix",
     "test": "cross-env NODE_ENV=test mocha test",
-    "pre-commit": "npm run lint && npm test"
+    "prepare": "husky install"
   },
   "dependencies": {
-    "@hapi/boom": "9.1.0",
-    "@hapi/hoek": "9.0.4",
-    "@hapi/joi": "15.1.1",
-    "async": "^3.2.3",
+    "@hapi/boom": "^10.0.1",
+    "@hapi/hoek": "^11.0.4",
+    "async": "^3.2.5",
+    "joi": "^17.12.0",
     "lodash": "^4.17.21",
-    "marked": "^4.0.14",
+    "marked": "^11.1.1",
     "negotiator": "^0.6.3",
     "pug": "^3.0.2",
     "urijs": "^1.19.11",
-    "url-template": "2.0.8"
+    "url-template": "^3.1.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.17.9",
-    "@babel/eslint-parser": "^7.17.0",
-    "@hapi/hapi": "18.4.1",
-    "@hapi/vision": "6.0.1",
-    "babel-loader": "^8.2.5",
-    "chai": "^4.3.6",
-    "chai-string": "^1.5.0",
+    "@babel/core": "^7.23.7",
+    "@babel/eslint-parser": "^7.23.3",
+    "@hapi/hapi": "^21.3.2",
+    "@hapi/vision": "^7.0.3",
+    "@sequencemedia/sinon-chai": "^0.0.6",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "chai": "^5.0.0",
     "cross-env": "^7.0.3",
-    "eslint": "7.32.0",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-mocha": "^10.0.4",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "5.2.0",
-    "husky": "^7.0.4",
-    "mocha": "^10.0.0",
-    "module-alias": "^2.2.2",
-    "sinon": "^13.0.2",
-    "sinon-chai": "^3.7.0"
+    "eslint": "^8.56.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-config-standard-with-typescript": "^43.0.0",
+    "husky": "^8.0.3",
+    "mocha": "^10.2.0",
+    "sinon": "^17.0.1"
   },
-  "_moduleAliases": {
-    "halacious": "."
+  "imports": {
+    "#halacious/*": "./src/*.mjs",
+    "#halacious": "./src/index.mjs",
+    "#where-am-i": "./where-am-i.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs"
   }
 }

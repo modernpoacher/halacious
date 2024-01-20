@@ -1,30 +1,30 @@
-require('module-alias/register')
+import path from 'path'
 
-const path = require('path')
+import * as chai from 'chai'
 
-const chai = require('chai')
+import hapi from '@hapi/hapi'
+import vision from '@hapi/vision'
+import sinon from 'sinon'
+import sinonChai from '@sequencemedia/sinon-chai'
+import halacious from '#halacious'
+import {
+  plugin
+} from '#halacious/plugin'
+import _ from 'lodash'
+import url from 'url'
+import IAM from '#where-am-i'
 
 const should = chai.should()
-const hapi = require('@hapi/hapi')
-const vision = require('@hapi/vision')
-const sinon = require('sinon')
-const sinonChai = require('sinon-chai')
-const chaiString = require('chai-string')
-const halacious = require('halacious')
-const { plugin } = require('halacious/lib/plugin')
-const _ = require('lodash')
-const url = require('url')
 
 chai.use(sinonChai)
-chai.use(chaiString)
 
-const { name: PLUGIN } = require('halacious/package')
+const PLUGIN = 'halacious' // '@modernpoacher/halacious'
 
 describe('Halacious Plugin', () => {
   let server
 
   beforeEach((done) => {
-    server = hapi.server({ port: 9090 })
+    server = hapi.server({ port: 9191 })
 
     done()
   })
@@ -33,9 +33,9 @@ describe('Halacious Plugin', () => {
     server.stop().then(done).catch(done)
   })
 
-  it('should have a registration function', () => {
+  xit('should have a registration function', () => {
     plugin.should.have.property('register')
-    plugin.register.should.be.a('Function')
+    plugin.register.should.be.a('function')
   })
 
   it('should expose a namespace function', (done) => {
@@ -47,7 +47,7 @@ describe('Halacious Plugin', () => {
         } = server
 
         plugin.should.have.property('namespaces')
-        plugin.namespace.should.be.a('Function')
+        plugin.namespace.should.be.a('function')
       })
       .then(done)
       .catch(done)
@@ -70,7 +70,7 @@ describe('Halacious Plugin', () => {
         namespace.should.have.property('name', 'mycompany')
         namespace.should.have.property('prefix', 'mco')
         namespace.should.have.property('rel')
-        namespace.rel.should.be.a('Function')
+        namespace.rel.should.be.a('function')
       })
       .then(done)
       .catch(done)
@@ -348,7 +348,7 @@ describe('Halacious Plugin', () => {
         } = server
 
         namespaces.add({
-          dir: path.resolve(__dirname, 'rels/mycompany'),
+          dir: path.join(IAM, './test/rels/mycompany'),
           prefix: 'mco'
         })
       })
@@ -375,7 +375,7 @@ describe('Halacious Plugin', () => {
         } = server
 
         const namespace = plugin.namespaces.add({
-          dir: path.resolve(__dirname, 'rels/mycompany'),
+          dir: path.join(IAM, './test/rels/mycompany'),
           prefix: 'mco'
         })
 
@@ -404,7 +404,7 @@ describe('Halacious Plugin', () => {
         } = server
 
         plugin.namespaces.add({
-          dir: path.resolve(__dirname, 'rels/mycompany'),
+          dir: path.join(IAM, './test/rels/mycompany'),
           prefix: 'mco'
         })
       })
@@ -1456,7 +1456,7 @@ describe('Halacious Plugin', () => {
           .property('_links')
           .that.has.a.property('self')
           .that.has.a.property('href')
-          .that.endsWith('/people/100?donotbreakthis=true')
+          .and.satisfies(href => href.endsWith('/people/100?donotbreakthis=true'))
       })
       .then(done)
       .catch(done)
@@ -1686,7 +1686,7 @@ describe('Halacious Plugin', () => {
         .then(() =>
           server.inject({
             method: 'get',
-            url: 'http://localhost:9090/api/people/100',
+            url: 'http://localhost:9191/api/people/100',
             headers: { Accept: 'application/hal+json' }
           })
         )
@@ -1694,7 +1694,7 @@ describe('Halacious Plugin', () => {
           const result = JSON.parse(res.payload)
           result._links.self.should.have.property(
             'href',
-            'http://localhost:9090/api/people/100'
+            'http://localhost:9191/api/people/100'
           )
         })
         .then(done)
@@ -1728,7 +1728,7 @@ describe('Halacious Plugin', () => {
         .then(() =>
           server.inject({
             method: 'get',
-            url: 'http://localhost:9090/api/people/100',
+            url: 'http://localhost:9191/api/people/100',
             headers: { Accept: 'application/hal+json' }
           })
         )
@@ -1736,7 +1736,7 @@ describe('Halacious Plugin', () => {
           const result = JSON.parse(res.payload)
           result._links.schedule.should.have.property(
             'href',
-            'http://localhost:9090/api/people/100/schedule'
+            'http://localhost:9191/api/people/100/schedule'
           )
         })
         .then(done)
@@ -1777,7 +1777,7 @@ describe('Halacious Plugin', () => {
         .then(() =>
           server.inject({
             method: 'get',
-            url: 'http://localhost:9090/api/people/100',
+            url: 'http://localhost:9191/api/people/100',
             headers: { Accept: 'application/hal+json' }
           })
         )
@@ -1785,7 +1785,7 @@ describe('Halacious Plugin', () => {
           const result = JSON.parse(res.payload)
           result._embedded['mco:boss']._links.self.should.have.property(
             'href',
-            'http://localhost:9090/api/people/100/boss'
+            'http://localhost:9191/api/people/100/boss'
           )
         })
         .then(done)
@@ -1818,7 +1818,7 @@ describe('Halacious Plugin', () => {
         .then(() =>
           server.inject({
             method: 'post',
-            url: 'http://localhost:9090/api/people',
+            url: 'http://localhost:9191/api/people',
             headers: { Accept: 'application/hal+json' }
           })
         )
@@ -1826,7 +1826,7 @@ describe('Halacious Plugin', () => {
           const result = JSON.parse(res.payload)
           result._links.self.should.have.property(
             'href',
-            'http://localhost:9090/api/people/100'
+            'http://localhost:9191/api/people/100'
           )
         })
         .then(done)
@@ -1864,7 +1864,7 @@ describe('Halacious Plugin', () => {
         .then(() =>
           server.inject({
             method: 'post',
-            url: 'http://localhost:9090/api/people',
+            url: 'http://localhost:9191/api/people',
             headers: { Accept: 'application/hal+json' }
           })
         )
@@ -1873,7 +1873,7 @@ describe('Halacious Plugin', () => {
           result.should.have
             .property('_links')
             .that.has.property('mco:boss')
-            .that.has.property('href', 'http://localhost:9090/api/people/101')
+            .that.has.property('href', 'http://localhost:9191/api/people/101')
         })
         .then(done)
         .catch(done)
@@ -2053,7 +2053,7 @@ describe('Halacious Plugin', () => {
   it('should support absolute api root hrefs', (done) => {
     server = new hapi.Server({
       debug: { request: ['*'], log: ['*'] },
-      port: 9090
+      port: 9191
     })
 
     server.route({

@@ -1,37 +1,32 @@
-require('module-alias/register')
-
-const chai = require('chai')
+import * as chai from 'chai'
+import hapi from '@hapi/hapi'
+import halacious from '#halacious'
+import RepresentationFactory from '#halacious/representation'
 
 const should = chai.should()
-const hapi = require('@hapi/hapi')
-const halacious = require('halacious')
 
-const { RepresentationFactory } = require('halacious/lib/representation')
-
-const { name: PLUGIN } = require('halacious/package')
+const PLUGIN = 'halacious' // '@modernpoacher/halacious'
 
 describe('Representation Factory', () => {
   let server
-  let plugin
   let representationFactory
 
-  beforeEach((done) => {
-    server = hapi.server({ port: 9090 })
+  beforeEach(async () => {
+    server = hapi.server({ port: 9191 })
 
-    server
-      .register(halacious)
-      .then(() => {
-        plugin = server.plugins[PLUGIN]
-        representationFactory = new RepresentationFactory(plugin)
-        done()
-      })
-      .catch((err) => {
-        done(err)
-      })
+    await server.register(halacious)
+
+    const {
+      plugins: {
+        [PLUGIN]: plugin
+      }
+    } = server
+
+    representationFactory = new RepresentationFactory(plugin)
   })
 
-  afterEach((done) => {
-    server.stop().then(done).catch(done)
+  afterEach(async () => {
+    await server.stop()
   })
 
   it('should create a new representation', () => {
@@ -213,6 +208,12 @@ describe('Representation Factory', () => {
   })
 
   it('should link to a registered rel', () => {
+    const {
+      plugins: {
+        [PLUGIN]: plugin
+      }
+    } = server
+
     plugin.namespaces
       .add({ name: 'mycompany', prefix: 'mco' })
       .rel({ name: 'boss' })
@@ -239,6 +240,12 @@ describe('Representation Factory', () => {
   })
 
   it('should include a curie link', () => {
+    const {
+      plugins: {
+        [PLUGIN]: plugin
+      }
+    } = server
+
     plugin.namespaces
       .add({ name: 'mycompany', prefix: 'mco' })
       .rel({ name: 'boss' })
@@ -252,6 +259,12 @@ describe('Representation Factory', () => {
   })
 
   it('should embed an entity', () => {
+    const {
+      plugins: {
+        [PLUGIN]: plugin
+      }
+    } = server
+
     plugin.namespaces
       .add({ name: 'mycompany', prefix: 'mco' })
       .rel({ name: 'boss' })
@@ -287,6 +300,12 @@ describe('Representation Factory', () => {
   })
 
   it('should embed an empty array', () => {
+    const {
+      plugins: {
+        [PLUGIN]: plugin
+      }
+    } = server
+
     plugin.namespaces
       .add({ name: 'mycompany', prefix: 'mco' })
       .rel({ name: 'boss' })
@@ -315,6 +334,12 @@ describe('Representation Factory', () => {
   })
 
   it('should use top level curie link', () => {
+    const {
+      plugins: {
+        [PLUGIN]: plugin
+      }
+    } = server
+
     plugin.namespaces
       .add({ name: 'mycompany', prefix: 'mco' })
       .rel({ name: 'boss' })

@@ -1,12 +1,10 @@
-require('module-alias/register')
-
 const hapi = require('@hapi/hapi')
 const vision = require('@hapi/vision')
 const hoek = require('@hapi/hoek')
 const Uri = require('urijs')
-const halacious = require('halacious')
+const halacious = require('#halacious')
 
-const { name: PLUGIN } = require('halacious/package')
+const { name: PLUGIN } = require('#halacious/package')
 
 const users = []
 

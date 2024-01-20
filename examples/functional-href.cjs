@@ -1,23 +1,6 @@
-require('module-alias/register')
-
 const hapi = require('@hapi/hapi')
 const vision = require('@hapi/vision')
-const halacious = require('halacious')
-
-function User (id, firstName, lastName, googlePlusId) {
-  this.id = id
-  this.firstName = firstName
-  this.lastName = lastName
-  this.googlePlusId = googlePlusId
-}
-
-User.prototype.toHal = function (rep, next) {
-  if (this.googlePlusId) {
-    rep.link('home', `http://plus.google.com/${this.googlePlusId}`)
-    rep.ignore('googlePlusId')
-  }
-  next()
-}
+const halacious = require('#halacious')
 
 async function init () {
   const server = hapi.server({ port: 8080 })
@@ -28,6 +11,26 @@ async function init () {
 
   server.route({
     method: 'get',
+    path: '/users/{id}',
+    handler (req) {
+      return { id: req.params.id, bossId: 101 }
+    },
+    config: {
+      id: 'user',
+      plugins: {
+        hal: {
+          links: {
+            boss (rep, entity) {
+              return rep.route('user', { id: entity.bossId })
+            }
+          }
+        }
+      }
+    }
+  })
+
+  server.route({
+    method: 'get',
     path: '/users',
     handler () {
       return {
@@ -35,8 +38,8 @@ async function init () {
         count: 2,
         limit: 2,
         items: [
-          new User(100, 'Brad', 'Leupen', '107835557095464780852'),
-          new User(101, 'Mark', 'Zuckerberg')
+          { id: 100, firstName: 'Brad', lastName: 'Leupen' },
+          { id: 101, firstName: 'Barack', lastName: 'Obama' }
         ]
       }
     },
@@ -46,7 +49,9 @@ async function init () {
           embedded: {
             item: {
               path: 'items',
-              href: './{item.id}'
+              href (rep, ctx) {
+                return rep.route('user', { id: ctx.item.id })
+              }
             }
           }
         }
