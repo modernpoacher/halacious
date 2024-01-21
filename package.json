@@ -77,6 +77,8 @@
     "#where-am-i": "./where-am-i.mjs"
   },
   "exports": {
-    ".": "./src/index.mjs"
+    ".": "./src/index.mjs",
+    "./utils/*": "./src/utils/*.mjs",
+    "./utils": "./src/utils.mjs"
   }
 }

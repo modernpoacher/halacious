@@ -42,6 +42,30 @@ export function hasRepresentationRequestPath (representation) {
   return hasPath(getRepresentationRequest(representation))
 }
 
+export function getRepresentationRequestRoute (representation) {
+  return getRoute(getRepresentationRequest(representation))
+}
+
+export function hasRepresentationRequestRoute (representation) {
+  return hasRoute(getRepresentationRequest(representation))
+}
+
+export function getRepresentationRequestRoutePath (representation) {
+  return getPath(getRepresentationRequestRoute(representation))
+}
+
+export function hasRepresentationRequestRoutePath (representation) {
+  return hasPath(getRepresentationRequestRoute(representation))
+}
+
+export function getRepresentationRequestRouteMethod (representation) {
+  return getMethod(getRepresentationRequestRoute(representation))
+}
+
+export function hasRepresentationRequestRouteMethod (representation) {
+  return hasMethod(getRepresentationRequestRoute(representation))
+}
+
 export function getRoutePath (route) {
   return getPath(route)
 }
@@ -114,8 +138,24 @@ export function getRequestRoute (request) {
   return getRoute(request)
 }
 
-export function hastRequestRoute (request) {
+export function hasRequestRoute (request) {
   return hasRoute(request)
+}
+
+export function getRequestRoutePath (request) {
+  return getPath(getRequestRoute(request))
+}
+
+export function hasRequestRoutePath (request) {
+  return hasPath(getRequestRoute(request))
+}
+
+export function getRequestRouteMethod (request) {
+  return getMethod(getRequestRoute(request))
+}
+
+export function hasRequestRouteMethod (request) {
+  return hasMethod(getRequestRoute(request))
 }
 
 export function getRequestServer (request) {
@@ -194,6 +234,14 @@ export function getPath ({ path }) {
 
 export function hasPath (arg) {
   return Boolean(getPath(arg))
+}
+
+export function getMethod ({ method }) {
+  return method
+}
+
+export function hasMethod (arg) {
+  return Boolean(getMethod(arg))
 }
 
 export function getSelf ({ self }) {
