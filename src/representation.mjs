@@ -1,6 +1,12 @@
 import * as hoek from '@hapi/hoek'
 import URI from 'urijs'
 
+import {
+  getSelf,
+  getHref,
+  getPrefix
+} from './utils.mjs'
+
 const TEMPLATE = /{*}/
 
 /**
@@ -93,9 +99,7 @@ export class Representation {
 
       const namespaces = root.getNamespaces()
 
-      const {
-        prefix
-      } = namespace
+      const prefix = getPrefix(namespace)
 
       if (Reflect.has(namespaces, prefix)) return
 
@@ -259,23 +263,19 @@ export class Representation {
     // adds the namespace to the top level curie list
     this.curie(rel.namespace)
 
-    const {
-      self: {
-        href = ''
-      }
-    } = links
+    const href = getHref(getSelf(links)) ?? ''
 
     link = halacious.link(link, href)
 
     if (TEMPLATE.test(link.href)) link.templated = true
 
     // e.g. 'mco:rel'
-    const value = Reflect.get(links, key)
-    if (value) {
-      Reflect.set(links, key, [].concat(value, link))
-    } else {
-      Reflect.set(links, key, link)
-    }
+
+    Reflect.set(links, key, (
+      Reflect.has(links, key)
+        ? [].concat(Reflect.get(links, key), link)
+        : link
+    ))
 
     return link
   }
@@ -287,11 +287,7 @@ export class Representation {
    * @return {*}
    */
   resolve (relativePath) {
-    const {
-      self: {
-        href = ''
-      }
-    } = this.getLinks()
+    const href = getHref(getSelf(this.getLinks())) ?? ''
 
     return (
       new URI(relativePath)
@@ -336,24 +332,19 @@ export class Representation {
       )
     }
 
-    const {
-      self: {
-        href = ''
-      }
-    } = this.getLinks()
-
-    const root = this.getRoot()
+    const href = getHref(getSelf(this.getLinks())) ?? ''
 
     self = halacious.link(self, href)
 
+    const root = this.getRoot()
+
     const embed = this.factory.create(entity, self, root)
 
-    const value = Reflect.get(embedded, key)
-    if (value) {
-      Reflect.set(embedded, key, [].concat(value, embed))
-    } else {
-      Reflect.set(embedded, key, embed)
-    }
+    Reflect.set(embedded, key, (
+      Reflect.has(embedded, key)
+        ? [].concat(Reflect.get(embedded, key), embed)
+        : embed
+    ))
 
     return embed
   }
@@ -366,11 +357,11 @@ export class Representation {
    * @param arg
    * @return {Representation}
    */
-  embedCollection (rel, self, arg) {
+  embedCollection (rel, self, arg, ...args) {
     const entities = (
       Array.isArray(arg)
         ? arg
-        : [arg]
+        : [arg].concat(args)
     )
 
     entities

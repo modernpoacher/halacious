@@ -188,74 +188,90 @@ export { default as getMediaType } from './utils/getMediaType.mjs'
 
 export { default as getTemplateContext } from './utils/getTemplateContext.mjs'
 
-function getPath ({ path }) {
+export function getPath ({ path }) {
   return path
 }
 
-function hasPath (arg) {
+export function hasPath (arg) {
   return Boolean(getPath(arg))
 }
 
-function getSelf ({ self }) {
+export function getSelf ({ self }) {
   return self
 }
 
-function hasSelf (arg) {
+export function hasSelf (arg) {
   return Boolean(getSelf(arg))
 }
 
-function getHref ({ href }) {
+export function getHref ({ href }) {
   return href
 }
 
-function hasHref (arg) {
+export function hasHref (arg) {
   return Boolean(getHref(arg))
 }
 
-function getServer ({ server }) {
+export function getServer ({ server }) {
   return server
 }
 
-function hasServer (arg) {
+export function hasServer (arg) {
   return Boolean(getServer(arg))
 }
 
-function getRequest ({ request }) {
+export function getRequest ({ request }) {
   return request
 }
 
-function hasRequest (arg) {
+export function hasRequest (arg) {
   return Boolean(getRequest(arg))
 }
 
-function getResponse ({ response }) {
+export function getResponse ({ response }) {
   return response
 }
 
-function hasResponse (arg) {
+export function hasResponse (arg) {
   return Boolean(getResponse(arg))
 }
 
-function getHeaders ({ headers }) {
+export function getHeaders ({ headers }) {
   return headers
 }
 
-function hasHeaders (arg) {
+export function hasHeaders (arg) {
   return Boolean(getHeaders(arg))
 }
 
-function getEntity ({ entity }) {
+export function getEntity ({ entity }) {
   return entity
 }
 
-function hasEntity (arg) {
+export function hasEntity (arg) {
   return Boolean(getEntity(arg))
 }
 
-function getRoute ({ route }) {
+export function getRoute ({ route }) {
   return route
 }
 
-function hasRoute (arg) {
+export function hasRoute (arg) {
   return Boolean(getRoute(arg))
+}
+
+export function getName ({ name }) {
+  return name
+}
+
+export function hasName (arg) {
+  return Boolean(getName(arg))
+}
+
+export function getPrefix ({ prefix }) {
+  return prefix
+}
+
+export function hasPrefix (arg) {
+  return Boolean(getPrefix(arg))
 }
