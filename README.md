@@ -33,13 +33,13 @@ be accomplished without writing any code at all.
 Start by npm installing Halicious into your Hapi project folder:
 
 ```shell
-npm install @modernpoacher/halacious --save
+npm i -P @modernpoacher/halacious
 ```
 
 or
 
 ```shell
-yarn add @modernpoacher/halacious --dev
+yarn add @modernpoacher/halacious
 ```
 
 Register the plugin with the app server
@@ -54,7 +54,7 @@ async function init () {
   await server.register(halacious)
 
   server.route({
-    method: 'get',
+    method: 'GET',
     path: '/hello/{name}',
     handler (req) {
       return { message: 'Hello, ' + req.params.name }
@@ -98,7 +98,7 @@ Links may be declared directly within the route config.
 
 ```javascript
 server.route({
-  method: 'get',
+  method: 'GET',
   path: '/users/{userId}',
   handler (req) {
     return { id: req.params.userId, name: 'User ' + req.params.userId, googlePlusId: '107835557095464780852' }
@@ -144,7 +144,7 @@ automatically convert nested objects into embedded HAL representations (if you a
 
 ```javascript
 server.route({
-  method: 'get',
+  method: 'GET',
   path: '/users/{userId}',
   handler (req) {
     return {
@@ -231,7 +231,7 @@ In either case, the method signature is the same: `fn(rep, callback)` where
 
 ```javascript
 server.route({
-  method: 'get',
+  method: 'GET',
   path: '/users',
   handler (req) {
     return {
@@ -331,7 +331,7 @@ User.prototype.toHal = function(rep, next) {
 }
 
 server.route({
-    method: 'get',
+    method: 'GET',
     path: '/users',
     handler (req) {
         return {
@@ -412,7 +412,7 @@ async function init () {
   namespace.rel({ name: 'boss', description: 'a users boss' })
 
   server.route({
-    method: 'get',
+    method: 'GET',
     path: '/users/{userId}',
     handler (req) {
         return { id: req.params.userId, name: 'User ' + req.params.userId, bossId: 200 }
@@ -515,7 +515,7 @@ async function init () {
   namespace.rel({ name: 'user', description: 'a single user' })
 
   server.route({
-    method: 'get',
+    method: 'GET',
     path: '/users',
     handler () {
       return {}
@@ -530,7 +530,7 @@ async function init () {
   })
 
   server.route({
-    method: 'get',
+    method: 'GET',
     path: '/users/{userId}',
     handler () {
       return {}
