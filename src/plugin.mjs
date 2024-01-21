@@ -55,7 +55,9 @@ import {
 
 const HAL_MIME_TYPE = 'application/hal+json'
 
-const log = debug('@sequencemedia/halacious')
+const log = debug('@modernpoacher/halacious')
+
+log('`@modernpoacher/halacious` is awake')
 
 const optionsSchema = joi.object({
   absolute: joi.boolean().default(false),

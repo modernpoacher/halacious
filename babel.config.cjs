@@ -8,7 +8,7 @@ const {
   }
 } = process
 
-log('`halacious` is awake')
+log('`@modernpoacher/halacious` is awake')
 
 function env () {
   log({ NODE_ENV })
