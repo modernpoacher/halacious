@@ -36,10 +36,7 @@ import {
   getRouteSettingsPluginsHal,
   getRouteSettingsPluginsHalApi,
   getRouteSettingsPluginsHalQuery,
-  getRouteSettingsPluginsHalAbsolute,
   getRouteSettingsIsInternal,
-  hasRoutePath,
-  getRoutePath,
   getRequestRoute,
   getRequestHeadersAccept,
   getRequestServer,
@@ -49,9 +46,26 @@ import {
   getResponseVariety,
   getResponseStatusCode,
   isResponseStatusCodeInSuccessRange,
+  getPath,
+  hasPath,
+  getName,
+  hasName,
+  getPrefix,
+  getRels,
+  hasRels,
+  getAbsolute,
+  getQuery,
+  getIgnore,
   getMediaType,
-  getTemplateContext
+  getTemplateContext,
+  isRelativePath
 } from './utils.mjs'
+
+function sortByName ({ name: alpha }, { name: omega }) {
+  return (
+    alpha.localeCompare(omega)
+  )
+}
 
 const HAL_MIME_TYPE = 'application/hal+json'
 
@@ -99,10 +113,10 @@ const relSchema = joi.object({
   qname: joi
     .function()
     .optional()
-    .default(function getJoiDefault () {
-      return function joiDefault () {
+    .default(function getQName () {
+      return function qname () {
         return this.namespace
-          ? util.format('%s:%s', this.namespace.prefix, this.name)
+          ? util.format('%s:%s', getPrefix(this.namespace), this.name)
           : this.name
       }
     })
@@ -129,22 +143,24 @@ const namespaceSchema = joi.object({
   rel: joi
     .function()
     .optional()
-    .default(function getJoiDefault () {
-      return function joiDefault (rel) {
-        this.rels = this.rels || {}
+    .default(function getRel () {
+      return function rel (rel) {
+        if (!hasRels(this)) this.rels = {}
 
         if (_.isString(rel)) rel = { name: rel }
 
-        rel.name =
-              rel.name ||
-              (rel.file && path.basename(rel.file, path.extname(rel.file)))
+        if (!hasName(rel)) rel.name = (rel.file && path.basename(rel.file, path.extname(rel.file)))
 
         const { error, value } = relSchema.validate(rel)
         if (error) throw error
 
         rel = value
 
-        this.rels[rel.name] = rel
+        const relName = getName(rel)
+        const rels = getRels(this)
+
+        Reflect.set(rels, relName, rel)
+
         rel.namespace = this
 
         return this
@@ -155,14 +171,14 @@ const namespaceSchema = joi.object({
   scanDirectory: joi
     .function()
     .optional()
-    .default(function getJoiDefault () {
-      return function joiDefault (directory) {
+    .default(function getScanDirectory () {
+      return function scanDirectory (directory) {
         const files = readdirSync(directory)
 
         files
-          .forEach(function (file) {
+          .forEach((file) => {
             this.rel({ file: path.join(directory, file) })
-          }, this)
+          })
 
         return this
       }
@@ -182,11 +198,27 @@ const linkSchema = joi.object({
 })
 
 /**
+ * Wraps callback functions
+ *
+ * @param {(err: Error | null, any) => void} done
+ * @return {(err: Error | null, any) => void}
+ */
+function wrap (done, representation) {
+  return function wrap (err, result) {
+    if (err instanceof Error) {
+      done(err)
+    } else {
+      done(null, result || representation)
+    }
+  }
+}
+
+/**
  * Registers plugin routes and an "api" object with the hapi server
  *
  * @param server
  * @param opts
- * @param {(err: Error | null, any) => void} callback
+ * @param {(err: Error | null, any) => void} done
  */
 export const plugin = {
   pkg: PKG,
@@ -202,14 +234,16 @@ export const plugin = {
       ? server.select(settings.apiServerLabel)
       : server
 
-    const internals = {}
-
-    // for tracking down namespaces
-    internals.byName = {}
-    internals.byPrefix = {}
+    const byName = new Map()
+    const byPrefix = new Map()
 
     // keeps found routes in a cache
     const routeCache = new Map()
+
+    const internals = {
+      byName,
+      byPrefix
+    }
 
     /**
      * Route handler for /rels
@@ -266,13 +300,6 @@ export const plugin = {
       }
     }
 
-    function isRelativePath (path) {
-      return (
-        path &&
-        (path.substring(0, 2) === './' || path.substring(0, 3) === '../')
-      )
-    }
-
     /**
      * Locates a named route. This feature may not belong here
      *
@@ -280,43 +307,33 @@ export const plugin = {
      * @return {*}
      */
     function getRouteFromRouteCache (routeName) {
-      if (routeCache.has(routeName)) {
-        return routeCache.get(routeName)
+      if (!routeCache.has(routeName)) {
+        routeCache.set(routeName, (
+          server
+            .table()
+            .find((route) => (
+              getName(getRouteSettingsPluginsHal(route)) === routeName
+            ))
+        ))
       }
 
-      const route = (
-        server
-          .table()
-          .find((route) => {
-            const {
-              name
-            } = getRouteSettingsPluginsHal(route)
-
-            if (name === routeName) {
-              return route
-            }
-
-            return null
-          })
+      return (
+        routeCache.get(routeName)
       )
-
-      routeCache.set(routeName, route)
-
-      return route
     }
 
     /**
      * Configures a representation with parameters specified by a hapi route config. The configuration object may
      * include 'links', 'embedded', and 'prepare' properties.
      *
-     * @param {Representation} representation the representation to configure
      * @param {Record<string, any>} config the config object
-     * @param {(err: Error | null, any) => void} callback
+     * @param {Representation} representation the representation to configure
+     * @param {(err: Error | null, any) => void} done
      */
     function configureRepresentation (
-      representation,
       config,
-      callback
+      representation,
+      done
     ) {
       function getHref (href, context) {
         return _.isFunction(href)
@@ -325,46 +342,30 @@ export const plugin = {
       }
 
       /**
-       * Wraps callback functions to support callback(representation) instead of callback(null, representation)
-       *
-       * @param {(err: Error | null, any) => void} callback
-       * @return {(err: Error | null, any) => void}
-       */
-      function wrap (callback) {
-        return function (err, result) {
-          if (err instanceof Error) {
-            callback(err)
-          } else {
-            callback(null, result || representation)
-          }
-        }
-      }
-
-      /**
-       * @param {Representation} representation the representation to configure
        * @param {Record<string, any>} config the config object
-       * @param {(err: Error | null, any) => void} callback
+       * @param {Representation} representation the representation to configure
+       * @param {(err: Error | null, any) => void} done
        */
-      function prepareEntity (representation, callback) {
+      function prepareEntity (representation, done) {
         const { prepare } = config
 
         if (_.isFunction(prepare)) {
-          prepare(representation, wrap(callback))
+          prepare(representation, wrap(done, representation))
         } else {
-          callback(null, representation)
+          done(null, representation)
         }
       }
 
       /**
-       * @param {Representation} representation the representation to configure
        * @param {Record<string, any>} config the config object
-       * @param {(err: Error | null, any) => void} callback
+       * @param {Representation} representation the representation to configure
+       * @param {(err: Error | null, any) => void} done
        */
-      function cascadeEntity (representation, { ignore }, callback) {
-        representation.ignore(ignore)
+      function cascadeEntity (config, representation, done) {
+        representation.ignore(getIgnore(config))
 
         // cascade the async config functions
-        prepareEntity(representation, callback)
+        prepareEntity(representation, done)
       }
 
       try {
@@ -397,17 +398,17 @@ export const plugin = {
 
           async.each(
             Object.entries(embedded),
-            ([rel, route], callback) => {
+            ([rel, route], done) => {
               // assume that arrays should be embedded as a collection
-              if (!hasRoutePath(route)) {
+              if (!hasPath(route)) {
                 throw new Error(
                     `Invalid route "${getRepresentationRequestPath(representation)}": "embedded" route configuration property requires a path`
                 )
               }
 
-              let embedded = hoek.reach(entity, getRoutePath(route))
+              let embedded = hoek.reach(entity, getPath(route))
 
-              if (!embedded) return callback()
+              if (!embedded) return done()
 
               // force the embed array to be inialized. no self rel is necessary
               if (_.isArray(embedded)) representation.embed(rel, null, [])
@@ -416,11 +417,11 @@ export const plugin = {
               embedded = [].concat(embedded)
 
               // embedded reps probably also shouldnt appear in the object payload
-              representation.ignore(getRoutePath(route))
+              representation.ignore(getPath(route))
 
               async.each(
                 embedded,
-                (item, callback) => {
+                (item, done) => {
                   const link = internals.link(
                     getHref(route.href, { self: entity, item }),
                     getRepresentationSelfHref(representation)
@@ -435,78 +436,62 @@ export const plugin = {
                   // recursively process its links/embedded declarations
                   async.each(
                     embedded,
-                    (representation, callback) => {
-                      transformRepresentationEntity(representation, route, callback)
+                    (representation, done) => {
+                      transformRepresentationEntity(route, representation, done)
                     },
-                    callback
+                    done
                   )
                 },
-                callback
+                done
               )
             },
             (err) => {
-              if (err) return callback(err)
+              if (err) return done(err)
 
               return (
-                cascadeEntity(representation, config, callback)
+                cascadeEntity(config, representation, done)
               )
             }
           )
         } else {
           return (
-            cascadeEntity(representation, config, callback)
+            cascadeEntity(config, representation, done)
           )
         }
       } catch (e) {
-        callback(e)
+        done(e)
       }
     }
 
     function transformRepresentationEntity (
-      representation,
       config,
-      callback
+      representation,
+      done
     ) {
       /**
-       * Wraps callback functions to support callback(representation) instead of callback(null, representation)
+       * Looks for a toHal(representation, done) method on the entity. If found, it is called asynchronously. The method may modify the
+       * representation or pass back a completely new representation by calling done(newRep)
        *
-       * @param {(err: Error | null, any) => void} callback
-       * @return {(err: Error | null, any) => void}
+       * @param {(err: Error | null, any) => void} done
        */
-      function wrap (callback) {
-        return function (err, result) {
-          if (err instanceof Error) {
-            callback(err)
-          } else {
-            callback(null, result || representation)
-          }
-        }
-      }
-
-      /**
-       * Looks for a toHal(representation, callback) method on the entity. If found, it is called asynchronously. The method may modify the
-       * representation or pass back a completely new representation by calling callback(newRep)
-       *
-       * @param {(err: Error | null, any) => void} callback
-       */
-      function transformEntity (callback) {
-        const { entity: { toHal } } = representation
+      function transformEntity (done) {
+        const { toHal } = getRepresentationEntity(representation)
 
         if (_.isFunction(toHal)) {
-          toHal(representation, wrap(callback))
+          toHal(representation, wrap(done, representation))
         } else {
-          callback(null, representation)
+          done(null, representation)
         }
       }
 
       async.waterfall(
         [
           transformEntity,
-          (representation, callback) => {
-            configureRepresentation(representation, config, callback)
+          (representation, done) => {
+            configureRepresentation(config, representation, done)
           }
         ],
-        callback
+        done
       )
     }
 
@@ -520,8 +505,8 @@ export const plugin = {
      */
     function getRequestPath (request, queryTemplate, isAbsolute) {
       const path = isAbsolute
-        ? internals.buildUrl(request, request.path)
-        : request.path
+        ? internals.buildUrl(request, getPath(request))
+        : getPath(request)
 
       if (queryTemplate) {
         const uriTemplate = new URITemplate(path + queryTemplate)
@@ -553,7 +538,7 @@ export const plugin = {
           query = null
         ] = uri.split('?')
 
-        relativeUrl = route.charAt(0) === '/' ? route : '/' + route
+        relativeUrl = route.startsWith('/') ? route : '/' + route
         queryParams = query || queryParams
       }
 
@@ -605,9 +590,9 @@ export const plugin = {
      *
      * @param {boolean} isAbsolute
      * @param {Representation} representation
-     * @param {(err: Error | null, any) => void} callback
+     * @param {(err: Error | null, any) => void} done
      */
-    function toHal (isAbsolute, representation, callback) {
+    function toHal (isAbsolute, representation, done) {
       const request = getRepresentationRequest(representation)
 
       // grab the routing table and iterate
@@ -637,7 +622,7 @@ export const plugin = {
           }
         })
 
-      callback()
+      done()
     }
 
     /**
@@ -676,12 +661,16 @@ export const plugin = {
     }
 
     /**
-     * Returns a list of all registered namespaces sorted by name
+     * Returns namespaces sorted by name
      *
      * @return {*}
      */
     internals.namespaces = function namespaces () {
-      return _.sortBy(Object.values(internals.byName), 'name')
+      return (
+        Array
+          .from(byName.values())
+          .sort(sortByName)
+      )
     }
 
     /**
@@ -692,8 +681,7 @@ export const plugin = {
      */
     internals.namespaces.add = function add (namespace) {
       // if only dir is specified
-      namespace.name =
-        namespace.name || (namespace.dir && path.basename(namespace.dir))
+      if (!hasName(namespace)) namespace.name = (namespace.dir && path.basename(namespace.dir))
 
       // fail fast if the namespace isnt valid
       const { error, value } = namespaceSchema.validate(namespace)
@@ -710,8 +698,13 @@ export const plugin = {
       }
 
       // index and return
-      internals.byName[namespace.name] = namespace
-      internals.byPrefix[namespace.prefix] = namespace
+      const name = getName(namespace)
+      const prefix = getPrefix(namespace)
+
+      byName
+        .set(name, namespace)
+      byPrefix
+        .set(prefix, namespace)
 
       return namespace
     }
@@ -723,13 +716,20 @@ export const plugin = {
      */
     internals.namespaces.remove = function remove (name) {
       if (!name) {
-        internals.byName = {}
-        internals.byPrefix = {}
+        byName
+          .clear()
+        byPrefix
+          .clear()
       } else {
-        const namespace = internals.byName[name]
-        if (namespace) {
-          delete internals.byName[name]
-          delete internals.byPrefix[namespace.prefix]
+        if (byName.has(name)) {
+          const namespace = byName.get(name)
+
+          const prefix = getPrefix(namespace)
+
+          byName
+            .delete(name)
+          byPrefix
+            .delete(prefix)
         }
       }
     }
@@ -741,22 +741,23 @@ export const plugin = {
      * @return {*}
      */
     internals.namespace = function namespace (name) {
-      return internals.byName[name]
+      return (
+        byName.get(name)
+      )
     }
 
     /**
-     * Sorts and returns all rels by namespace
+     * Returns namespace rels sorted by name
      *
      * @return {*}
      */
     internals.rels = function rels () {
-      const rels = (
-        Object
-          .values(internals.byName)
+      return (
+        Array
+          .from(byName.values())
           .reduce((accumulator, { rels = {} }) => accumulator.concat(Object.values(rels)), [])
+          .sort(sortByName)
       )
-
-      return _.sortBy(rels, 'name')
     }
 
     /**
@@ -767,11 +768,18 @@ export const plugin = {
      * @return the new rel
      */
     internals.rels.add = function add (name, rel) {
-      const namespace = internals.byName[name]
-      if (!namespace) throw new Error(`Invalid namespace "${name}"`)
+      if (!byName.has(name)) throw new Error(`Invalid namespace "${name}"`)
+
+      const namespace = byName.get(name)
 
       namespace.rel(rel)
-      return namespace.rels[rel.name]
+
+      const relName = getName(rel)
+      const rels = getRels(namespace)
+
+      return (
+        Reflect.get(rels, relName)
+      )
     }
 
     /**
@@ -781,32 +789,37 @@ export const plugin = {
      * @return {*} the rel or undefined if not found
      */
     internals.rel = function rel (namespaceName, relName) {
-      let namespace, rel
+      if (!namespaceName) throw new Error(`Invalid rel "${namespaceName}"`)
+
+      let namespace
+      let rel
 
       if (!relName) {
         // for shorthand namespace:rel notation
         if (namespaceName.includes(':')) {
           const [prefix, name] = namespaceName.split(':')
-          namespace = internals.byPrefix[prefix]
+          namespace = byPrefix.get(prefix)
           relName = name
         }
       } else {
-        namespace = internals.byName[namespaceName]
+        namespace = byName.get(namespaceName)
       }
 
       // namespace is valid, check for rel
       if (namespace) {
-        if (namespace.rels[relName]) {
-          // rel has been defined
-          rel = namespace.rels[relName]
-        } else if (!settings.strict) {
-          // lazily create the rel
-          namespace.rel({ name: relName })
-          rel = namespace.rels[relName]
-        } else {
-          // could be a typo, fail fast to let the developer know
-          throw new Error(`Invalid rel "${namespaceName}"`)
+        const rels = getRels(namespace)
+
+        if (!Reflect.has(rels, relName)) {
+          if (!settings.strict) {
+            // lazily create the rel
+            namespace.rel({ name: relName })
+          } else {
+            // could be a typo, fail fast to let the developer know
+            throw new Error(`Invalid rel "${namespaceName}" ("${relName}")`)
+          }
         }
+
+        rel = Reflect.get(rels, relName)
       } else {
         // could be globally qualified (e.g. 'self')
         const { error, value } = relSchema.validate({ name: namespaceName })
@@ -824,7 +837,7 @@ export const plugin = {
      * @param link
      * @param relativeTo
      */
-    internals.link = function (link, relativeTo) {
+    internals.link = function link (link, relativeTo) {
       link = (
         _.isFunction(link) || _.isString(link)
           ? { href: link }
@@ -837,9 +850,6 @@ export const plugin = {
 
       link = value
 
-      /**
-       *  Isn't this just a substring match? Wut
-       */
       relativeTo = (relativeTo ?? '').split('?').shift().trim()
 
       if (
@@ -875,7 +885,7 @@ export const plugin = {
       const i = /{([\s\S]+?)(?:\?|\*\d*)??}/g
       const c = Object.fromEntries(Object.entries(params).map(([key, value]) => [key, typeof value !== 'object' ? encodeURIComponent(value) : value]))
 
-      const href = _.template(getRoutePath(route), { interpolate: i })(c)
+      const href = _.template(getPath(route), { interpolate: i })(c)
 
       const query = getRouteSettingsPluginsHalQuery(route) // hoek.reach(route.settings, 'plugins.hal.query')
 
@@ -894,7 +904,7 @@ export const plugin = {
      * @return {*}
      */
     internals.namespaceUrl = function namespaceUrl (request, namespace) {
-      const path = [settings.relsPath, namespace.name].join('/')
+      const path = [settings.relsPath, getName(namespace)].join('/')
 
       if (settings.absolute) {
         return internals.buildUrl(request, path)
@@ -970,27 +980,26 @@ export const plugin = {
       if (isEligible(request)) {
         const mediaType = getMediaType(request, settings.mediaTypes)
         if (mediaType) {
-          // all new representations for the request will be built by this guy
-          const representationFactory = new RepresentationFactory(api, request)
+          const config = getRouteSettingsPluginsHal(getRequestRoute(request))
 
           // e.g. honor the location header if it has been set using response.created(...) or response.location(...)
           const location = getRequestResponseHeadersLocation(request)
-          const isAbsolute = getRouteSettingsPluginsHalAbsolute(getRequestRoute(request)) || settings.absolute
+          const isAbsolute = Boolean(getAbsolute(config) || getAbsolute(settings))
 
           const self = (
             location
               ? getRelativeUrl(request, location, isAbsolute)
-              : getRequestPath(request, getRouteSettingsPluginsHalQuery(getRequestRoute(request)), isAbsolute)
+              : getRequestPath(request, getQuery(config), isAbsolute)
           )
 
+          // all new representations for the request will be built by this guy
+          const representationFactory = new RepresentationFactory(api, request)
           const representation = representationFactory.create(getRequestResponseSource(request), self)
 
           return (
             new Promise((resolve, reject) => {
-              transformRepresentationEntity(representation, getRouteSettingsPluginsHal(getRequestRoute(request)), (err, representation) => {
-                if (err) {
-                  return reject(err)
-                }
+              transformRepresentationEntity(config, representation, (err, representation) => {
+                if (err) return reject(err)
 
                 const response = getRequestResponse(request)
 
@@ -999,7 +1008,9 @@ export const plugin = {
                 response.source = representation.toJSON()
                 response.type(mediaType)
 
-                return resolve(h.continue)
+                return (
+                  resolve(h.continue)
+                )
               })
             })
           )

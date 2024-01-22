@@ -34,6 +34,10 @@ export function getRepresentationRequestServer (representation) {
   return getServer(getRepresentationRequest(representation))
 }
 
+export function hasRepresentationRequestServer (representation) {
+  return hasServer(getRepresentationRequest(representation))
+}
+
 export function getRepresentationRequestPath (representation) {
   return getPath(getRepresentationRequest(representation))
 }
@@ -74,14 +78,18 @@ export function hasRoutePath (route) {
   return hasPath(route)
 }
 
-export function getRouteSettings ({ settings = {} }) {
-  return settings
+export function getRouteSettings (route) {
+  return getSettings(route)
+}
+
+export function hasRouteSettings (route) {
+  return hasSettings(route)
 }
 
 export function getRouteSettingsIsInternal (route) {
   const {
     isInternal = false
-  } = getRouteSettings(route)
+  } = getRouteSettings(route) // ?? {}
 
   return isInternal
 }
@@ -89,7 +97,7 @@ export function getRouteSettingsIsInternal (route) {
 export function getRouteSettingsPlugins (route) {
   const {
     plugins = {}
-  } = getRouteSettings(route)
+  } = getRouteSettings(route) // ?? {}
 
   return plugins
 }
@@ -97,7 +105,7 @@ export function getRouteSettingsPlugins (route) {
 export function getRouteSettingsPluginsHal (route) {
   const {
     hal = {}
-  } = getRouteSettingsPlugins(route)
+  } = getRouteSettingsPlugins(route) // ?? {}
 
   return hal
 }
@@ -105,25 +113,17 @@ export function getRouteSettingsPluginsHal (route) {
 export function getRouteSettingsPluginsHalApi (route) {
   const {
     api = null
-  } = getRouteSettingsPluginsHal(route)
+  } = getRouteSettingsPluginsHal(route) // ?? {}
 
   return api
 }
 
 export function getRouteSettingsPluginsHalQuery (route) {
-  const {
-    query = null
-  } = getRouteSettingsPluginsHal(route)
-
-  return query
+  return getQuery(getRouteSettingsPluginsHal(route)) || null
 }
 
 export function getRouteSettingsPluginsHalAbsolute (route) {
-  const {
-    absolute = null
-  } = getRouteSettingsPluginsHal(route)
-
-  return absolute
+  return getAbsolute(getRouteSettingsPluginsHal(route)) || null
 }
 
 export function getRequestPath (request) {
@@ -132,6 +132,14 @@ export function getRequestPath (request) {
 
 export function hasRequestPath (request) {
   return hasPath(request)
+}
+
+export function getRequestMethod (request) {
+  return getMethod(request)
+}
+
+export function hasRequestMethod (request) {
+  return hasMethod(request)
 }
 
 export function getRequestRoute (request) {
@@ -177,7 +185,7 @@ export function hasRequestHeaders (request) {
 export function getRequestHeadersAccept (request) {
   const {
     accept
-  } = getRequestHeaders(request)
+  } = getRequestHeaders(request) ?? {}
 
   return accept
 }
@@ -193,7 +201,7 @@ export function hasRequestResponse (request) {
 export function getRequestResponseSource (request) {
   const {
     source
-  } = getRequestResponse(request)
+  } = getRequestResponse(request) ?? {}
 
   return source
 }
@@ -205,7 +213,7 @@ export function getRequestResponseHeaders (request) {
 export function getRequestResponseHeadersLocation (request) {
   const {
     location
-  } = getRequestResponseHeaders(request)
+  } = getRequestResponseHeaders(request) ?? {}
 
   return location
 }
@@ -284,6 +292,14 @@ export function hasResponse (arg) {
   return Boolean(getResponse(arg))
 }
 
+export function getSettings ({ settings }) {
+  return settings
+}
+
+export function hasSettings (arg) {
+  return Boolean(getSettings(arg))
+}
+
 export function getHeaders ({ headers }) {
   return headers
 }
@@ -322,4 +338,45 @@ export function getPrefix ({ prefix }) {
 
 export function hasPrefix (arg) {
   return Boolean(getPrefix(arg))
+}
+
+export function getRels ({ rels }) {
+  return rels
+}
+
+export function hasRels (arg) {
+  return Boolean(getRels(arg))
+}
+
+export function getAbsolute ({ absolute }) {
+  return absolute
+}
+
+export function hasAbsolute (arg) {
+  return Boolean(getAbsolute(arg))
+}
+
+export function getQuery ({ query }) {
+  return query
+}
+
+export function hasQuery (arg) {
+  return Boolean(getQuery(arg))
+}
+
+export function getIgnore ({ ignore }) {
+  return ignore
+}
+
+export function hasIgnore (arg) {
+  return Boolean(getIgnore(arg))
+}
+
+export function isRelativePath (path = '') {
+  const p = String(path ?? '')
+
+  return (
+    p.startsWith('./') ||
+    p.startsWith('../')
+  )
 }

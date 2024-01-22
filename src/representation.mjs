@@ -174,7 +174,8 @@ export class Representation {
   }
 
   /**
-   * Prepares the representation for JSON serialization.
+   * Prepares the representation for JSON serialization
+   *
    * @return {{}}
    */
   toJSON () {
@@ -304,7 +305,9 @@ export class Representation {
    * @return {*}
    */
   route (routeName, params) {
-    return this.getHalacious().route(routeName, params)
+    return (
+      this.getHalacious().route(routeName, params)
+    )
   }
 
   /**
@@ -379,7 +382,7 @@ export class Representation {
    * @param callback
    */
   configure (config, callback) {
-    this.getHalacious().configureRepresentation(this, config, callback)
+    this.getHalacious().configureRepresentation(config, this, callback)
   }
 }
 
