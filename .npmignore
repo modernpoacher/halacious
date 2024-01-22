@@ -25,3 +25,5 @@
 examples
 test
 tsconfig.json
+jsconfig.json
+babel.config.cjs

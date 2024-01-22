@@ -1,7 +1,7 @@
 import * as chai from 'chai'
 import hapi from '@hapi/hapi'
 import halacious from '#halacious'
-import RepresentationFactory from '#halacious/representation'
+import RepresentationFactory from '#halacious/representationFactory'
 
 const should = chai.should()
 
@@ -32,16 +32,16 @@ describe('Representation Factory', () => {
   it('should create a new representation', () => {
     should.exist(representationFactory)
     const entity = { firstName: 'Bob', lastName: 'Smith' }
-    const rep = representationFactory.create(entity, '/people')
-    rep._links.should.have.property('self')
-    rep._links.self.should.have.property('href', '/people')
-    rep.should.have.property('entity', entity)
+    const representation = representationFactory.create(entity, '/people')
+    representation._links.should.have.property('self')
+    representation._links.self.should.have.property('href', '/people')
+    representation.should.have.property('entity', entity)
   })
 
   it('should serialize a simple entity into property JSON', () => {
     const entity = { firstName: 'Bob', lastName: 'Smith' }
-    const rep = representationFactory.create(entity, '/people')
-    const json = JSON.stringify(rep)
+    const representation = representationFactory.create(entity, '/people')
+    const json = JSON.stringify(representation)
     json.should.deep.equal(
       '{"_links":{"self":{"href":"/people"}},"firstName":"Bob","lastName":"Smith"}'
     )
@@ -49,40 +49,40 @@ describe('Representation Factory', () => {
 
   it('should create an array of like-named links', () => {
     const entity = {}
-    const rep = representationFactory.create(entity, '/people')
-    rep.link('mco:boss', '/people/100')
-    rep.link('mco:boss', '/people/101')
-    rep.link('mco:boss', '/people/102')
-    rep._links['mco:boss'].should.have.length(3)
-    rep._links['mco:boss'][0].should.have.property('href', '/people/100')
-    rep._links['mco:boss'][1].should.have.property('href', '/people/101')
-    rep._links['mco:boss'][2].should.have.property('href', '/people/102')
+    const representation = representationFactory.create(entity, '/people')
+    representation.link('mco:boss', '/people/100')
+    representation.link('mco:boss', '/people/101')
+    representation.link('mco:boss', '/people/102')
+    representation._links['mco:boss'].should.have.length(3)
+    representation._links['mco:boss'][0].should.have.property('href', '/people/100')
+    representation._links['mco:boss'][1].should.have.property('href', '/people/101')
+    representation._links['mco:boss'][2].should.have.property('href', '/people/102')
   })
 
   it('should create a single-element array of links', () => {
     const entity = {}
-    const rep = representationFactory.create(entity, '/people')
-    rep.link('mco:boss', ['/people/100'])
-    rep._links['mco:boss'].should.have.length(1)
-    rep._links['mco:boss'][0].should.have.property('href', '/people/100')
+    const representation = representationFactory.create(entity, '/people')
+    representation.link('mco:boss', ['/people/100'])
+    representation._links['mco:boss'].should.have.length(1)
+    representation._links['mco:boss'][0].should.have.property('href', '/people/100')
   })
 
   it('should create an array of like-named embeds', () => {
     const entity = {}
-    const rep = representationFactory.create(entity, '/people')
-    rep.embed('mco:boss', '/people/100', {})
-    rep.embed('mco:boss', '/people/101', {})
-    rep.embed('mco:boss', '/people/102', {})
-    rep._embedded['mco:boss'].should.have.length(3)
-    rep._embedded['mco:boss'][0]._links.self.should.have.property(
+    const representation = representationFactory.create(entity, '/people')
+    representation.embed('mco:boss', '/people/100', {})
+    representation.embed('mco:boss', '/people/101', {})
+    representation.embed('mco:boss', '/people/102', {})
+    representation._embedded['mco:boss'].should.have.length(3)
+    representation._embedded['mco:boss'][0]._links.self.should.have.property(
       'href',
       '/people/100'
     )
-    rep._embedded['mco:boss'][1]._links.self.should.have.property(
+    representation._embedded['mco:boss'][1]._links.self.should.have.property(
       'href',
       '/people/101'
     )
-    rep._embedded['mco:boss'][2]._links.self.should.have.property(
+    representation._embedded['mco:boss'][2]._links.self.should.have.property(
       'href',
       '/people/102'
     )
@@ -90,9 +90,9 @@ describe('Representation Factory', () => {
 
   it('should ignore properties', () => {
     const obj = { id: 100, first: 'John', last: 'Smith' }
-    const rep = representationFactory.create(obj, '/people')
-    rep.ignore('id', 'first')
-    const json = JSON.stringify(rep)
+    const representation = representationFactory.create(obj, '/people')
+    representation.ignore('id', 'first')
+    const json = JSON.stringify(representation)
     json.should.deep.equal(
       '{"_links":{"self":{"href":"/people"}},"last":"Smith"}'
     )
@@ -100,10 +100,10 @@ describe('Representation Factory', () => {
 
   it('should support extra properties', () => {
     const obj = { id: 100, first: 'John', last: 'Smith' }
-    const rep = representationFactory.create(obj, '/people')
-    rep.ignore('id')
-    rep.prop('company', 'ACME')
-    const json = JSON.stringify(rep)
+    const representation = representationFactory.create(obj, '/people')
+    representation.ignore('id')
+    representation.prop('company', 'ACME')
+    const json = JSON.stringify(representation)
     json.should.deep.equal(
       '{"_links":{"self":{"href":"/people"}},"first":"John","last":"Smith","company":"ACME"}'
     )
@@ -138,8 +138,8 @@ describe('Representation Factory', () => {
       }
     }
 
-    const rep = representationFactory.create(entity, '/me')
-    const json = JSON.stringify(rep)
+    const representation = representationFactory.create(entity, '/me')
+    const json = JSON.stringify(representation)
     json.should.deep.equal(
       '{"_links":{"self":{"href":"/me"}},"id":100,"name":"John Smith","company":"Acme","boss":{"id":100,"name":"Boss Man","company":"Acme"}}'
     )
@@ -174,15 +174,15 @@ describe('Representation Factory', () => {
       }
     }
 
-    const rep = representationFactory.create(entity, '/me')
+    const representation = representationFactory.create(entity, '/me')
 
     // Should embed array of objects correctly
-    rep.embed('mco:boss', './boss', [boss])
+    representation.embed('mco:boss', './boss1', [boss])
 
     // Should embed single object correctly
-    rep.embed('mco:boss2', './boss2', boss)
+    representation.embed('mco:boss2', './boss2', boss)
 
-    const json = rep.toJSON()
+    const json = representation.toJSON()
     json.should.deep.equal({
       _links: { self: { href: '/me' } },
       id: 100,
@@ -191,7 +191,7 @@ describe('Representation Factory', () => {
       _embedded: {
         'mco:boss': [
           {
-            _links: { self: { href: '/me/boss' } },
+            _links: { self: { href: '/me/boss1' } },
             id: 100,
             name: 'Boss Man',
             company: 'Acme'
@@ -219,24 +219,24 @@ describe('Representation Factory', () => {
       .rel({ name: 'boss' })
 
     const entity = { firstName: 'Bob', lastName: 'Smith' }
-    const rep = representationFactory.create(entity, '/people')
-    rep.link('mco:boss', '/people/1234')
-    rep._links.should.have.property('mco:boss')
-    rep._links['mco:boss'].should.have.property('href', '/people/1234')
+    const representation = representationFactory.create(entity, '/people')
+    representation.link('mco:boss', '/people/1234')
+    representation._links.should.have.property('mco:boss')
+    representation._links['mco:boss'].should.have.property('href', '/people/1234')
   })
 
   it('should not break when linking an empty array', () => {
-    const rep = representationFactory.create({ firstName: 'Bob' }, '/people')
-    rep.link('employees', [])
-    rep._links.should.have.property('employees').that.has.length(0)
+    const representation = representationFactory.create({ firstName: 'Bob' }, '/people')
+    representation.link('employees', [])
+    representation._links.should.have.property('employees').that.has.length(0)
   })
 
   it('should resolve relative paths', () => {
     const entity = { firstName: 'Bob', lastName: 'Smith' }
-    const rep = representationFactory.create(entity, '/people')
-    rep.resolve('./1234').should.equal('/people/1234')
-    rep.resolve('../1234').should.equal('/1234')
-    rep.resolve('/companies/100').should.equal('/companies/100')
+    const representation = representationFactory.create(entity, '/people')
+    representation.resolve('./1234').should.equal('/people/1234')
+    representation.resolve('../1234').should.equal('/1234')
+    representation.resolve('/companies/100').should.equal('/companies/100')
   })
 
   it('should include a curie link', () => {
@@ -250,9 +250,9 @@ describe('Representation Factory', () => {
       .add({ name: 'mycompany', prefix: 'mco' })
       .rel({ name: 'boss' })
 
-    const rep = representationFactory.create({}, '/people')
-    rep.link('mco:boss', '/people/1234')
-    const json = JSON.stringify(rep)
+    const representation = representationFactory.create({}, '/people')
+    representation.link('mco:boss', '/people/1234')
+    const json = JSON.stringify(representation)
     json.should.deep.equal(
       '{"_links":{"self":{"href":"/people"},"curies":[{"name":"mco","href":"/rels/mycompany/{rel}","templated":true}],"mco:boss":{"href":"/people/1234"}}}'
     )
@@ -269,16 +269,16 @@ describe('Representation Factory', () => {
       .add({ name: 'mycompany', prefix: 'mco' })
       .rel({ name: 'boss' })
 
-    const rep = representationFactory.create(
+    const representation = representationFactory.create(
       { firstName: 'Bob', lastName: 'Smith' },
       '/people/me'
     )
-    rep.embed('mco:boss', './boss', {
+    representation.embed('mco:boss', './boss', {
       firstName: 'Boss',
       lastName: 'Man'
     })
 
-    const json = JSON.stringify(rep)
+    const json = JSON.stringify(representation)
     const obj = JSON.parse(json)
     obj.should.deep.equal({
       _links: {
@@ -310,13 +310,13 @@ describe('Representation Factory', () => {
       .add({ name: 'mycompany', prefix: 'mco' })
       .rel({ name: 'boss' })
 
-    const rep = representationFactory.create(
+    const representation = representationFactory.create(
       { firstName: 'Bob', lastName: 'Smith' },
       '/people/me'
     )
-    rep.embed('mco:boss', './boss', [])
+    representation.embed('mco:boss', './boss', [])
 
-    const json = JSON.stringify(rep)
+    const json = JSON.stringify(representation)
     const obj = JSON.parse(json)
     obj.should.deep.equal({
       _links: {
@@ -348,16 +348,16 @@ describe('Representation Factory', () => {
       .add({ name: 'google', prefix: 'goog' })
       .rel({ name: 'profile' })
 
-    const rep = representationFactory.create(
+    const representation = representationFactory.create(
       { firstName: 'Bob', lastName: 'Smith' },
       '/people/me'
     )
-    const boss = rep.embed('mco:boss', './boss', {
+    const boss = representation.embed('mco:boss', './boss', {
       firstName: 'Boss',
       lastName: 'Man'
     })
     boss.link('goog:profile', 'http://users.google.com/BossMan')
-    const json = JSON.stringify(rep)
+    const json = JSON.stringify(representation)
     const obj = JSON.parse(json)
     obj.should.deep.equal({
       _links: {

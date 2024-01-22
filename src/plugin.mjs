@@ -26,7 +26,7 @@ import URITemplate from 'urijs/src/URITemplate.js'
 import PKG from '#package' assert { type: 'json' }
 import IAM from '#where-am-i'
 
-import RepresentationFactory from './representation.mjs'
+import RepresentationFactory from './representationFactory.mjs'
 
 import {
   getRepresentationEntity,

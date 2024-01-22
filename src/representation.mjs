@@ -179,7 +179,7 @@ export class Representation {
    * @return {{}}
    */
   toJSON () {
-    // initialize the json entity
+    // initialize the entity
     const object = { _links: this.getLinks() }
 
     // copy all target properties in the entity using JSON.stringify(). if the entity has a .toJSON() implementation,
@@ -191,17 +191,10 @@ export class Representation {
     const ignore = this.getIgnore()
 
     JSON.stringify(entity, (key, value) => {
-      if (!key) {
-        return value
-      }
+      if (!key) return value
 
       if (!ignore.has(key)) Reflect.set(object, key, value)
     })
-
-    const props = this.getProps()
-
-    // merge in any extra properties
-    Object.assign(object, Object.fromEntries(Array.from(props.entries()).filter(([key]) => !ignore.has(key))))
 
     const embedded = this.getEmbedded()
 
@@ -221,9 +214,7 @@ export class Representation {
             }
 
             JSON.stringify(entryValue, (key, value) => {
-              if (!key) {
-                return value
-              }
+              if (!key) return value
 
               if (!ignore.has(key)) Reflect.set(currentValue, key, value)
             })
@@ -235,7 +226,12 @@ export class Representation {
       )
     }
 
-    return object
+    const props = this.getProps()
+
+    // merge in any extra properties
+    return (
+      Object.assign(object, Object.fromEntries(Array.from(props.entries()).filter(([key]) => !ignore.has(key))))
+    )
   }
 
   /**
@@ -386,60 +382,4 @@ export class Representation {
   }
 }
 
-/**
- * Responsible for creating all hal entities, top level or embedded, needed for a Hapi request
- *
- * @param halacious a reference to the plugin api
- * @param request a hapi request object
- * @constructor
- */
-export class RepresentationFactory {
-  constructor (halacious, request) {
-    this._halacious = halacious
-    this._request = request
-  }
-
-  getHalacious () {
-    return this._halacious
-  }
-
-  getRequest () {
-    return this._request
-  }
-
-  getRequestPath () {
-    return this.getRequest()?.path
-  }
-
-  get halacious () {
-    return this._halacious
-  }
-
-  get request () {
-    return this._request
-  }
-
-  get requestPath () {
-    return this.request?.path
-  }
-
-  /**
-   * Creates a new hal representation out of a javascript object
-   * @param {{}=} entity the entity to wrap with a representation. an empty object is created by default
-   * @param {String || {}=} self the self href or link object. The request's path is used by default
-   * @param {Representation} root a pointer to the top level representation for adding curied links
-   * should be expanded into absolute urls
-   * @return {Representation}
-   */
-  create (entity = {}, self = this.getRequestPath(), root) {
-    const halacious = this.getHalacious()
-
-    const link = halacious.link(self)
-
-    return (
-      new Representation(this, link, entity, root)
-    )
-  }
-}
-
-export default RepresentationFactory
+export default Representation
