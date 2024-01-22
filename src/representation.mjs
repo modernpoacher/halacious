@@ -14,13 +14,13 @@ const TEMPLATE = /{*}/
  * entities.
  *
  * @param factory
- * @param self
  * @param entity
+ * @param self
  * @param root
  * @constructor
  */
 export class Representation {
-  constructor (factory, self, entity, root = this) {
+  constructor (factory, entity, link, root = this) {
     const {
       _halacious: halacious,
       _request: request
@@ -28,15 +28,15 @@ export class Representation {
 
     const {
       href
-    } = self
+    } = link
 
     const links = {
-      self
+      self: link
     }
 
     this.factory = factory
-    this.self = href
     this.entity = entity
+    this.self = href
     this._root = root
     this._halacious = halacious
     this._request = request

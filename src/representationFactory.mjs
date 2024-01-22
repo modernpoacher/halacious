@@ -52,7 +52,7 @@ export class RepresentationFactory {
     const link = halacious.link(self)
 
     return (
-      new Representation(this, link, entity, root)
+      new Representation(this, entity, link, root)
     )
   }
 }
