@@ -267,7 +267,6 @@ export class Representation {
     if (TEMPLATE.test(link.href)) link.templated = true
 
     // e.g. 'mco:rel'
-
     Reflect.set(links, key, (
       Reflect.has(links, key)
         ? [].concat(Reflect.get(links, key), link)

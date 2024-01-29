@@ -22,7 +22,6 @@ export class RepresentationFactory {
   }
 
   getRequestPath () {
-    console.log(this.getRequest()?.path)
     return this.getRequest()?.path
   }
 
