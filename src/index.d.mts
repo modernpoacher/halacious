@@ -107,7 +107,7 @@ declare module '@modernpoacher/halacious/utils' {
 
   export function isResponseStatusCodeInSuccessRange (statusCode: number | undefined): boolean
 
-  export function getFieldValueByPath (path?: string, context: Record<string, any>): Record<string, any>
+  export function getFieldValueByPath (path?: string, context?: Record<string, any>): Record<string, any>
 
   export function getMediaType (request: { headers: Negotiator.Headers }, mediaTypes: string[]): string
 
