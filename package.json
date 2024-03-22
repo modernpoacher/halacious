@@ -57,7 +57,7 @@
     "@babel/preset-env": "^7.24.3",
     "@hapi/hapi": "^21.3.7",
     "@hapi/vision": "^7.0.3",
-    "@modernpoacher/hooks": "^1.0.469",
+    "@modernpoacher/hooks": "^1.0.470",
     "@sequencemedia/sinon-chai": "^0.0.6",
     "@types/negotiator": "^0.6.3",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
