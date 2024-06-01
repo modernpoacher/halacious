@@ -23,7 +23,7 @@ import URI from 'urijs'
 import * as urlTemplate from 'url-template'
 import URITemplate from 'urijs/src/URITemplate.js'
 
-import PKG from '#package' assert { type: 'json' }
+import PKG from '#package' with { type: 'json' }
 import IAM from '#where-am-i'
 
 import RepresentationFactory from './representationFactory.mjs'
