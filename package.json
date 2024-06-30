@@ -19,7 +19,7 @@
   "contributors": [
     "Brad Leupen"
   ],
-  "license": "MIT",
+  "license": "ISC",
   "engines": {
     "node": ">=18.12.0"
   },
