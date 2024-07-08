@@ -58,7 +58,7 @@
     "@hapi/hapi": "^21.3.10",
     "@hapi/vision": "^7.0.3",
     "@modernpoacher/hooks": "^1.0.481",
-    "@sequencemedia/sinon-chai": "^0.0.6",
+    "@sequencemedia/sinon-chai": "^0.0.9",
     "@types/negotiator": "^0.6.3",
     "@typescript-eslint/eslint-plugin": "^7.15.0",
     "@typescript-eslint/parser": "^7.15.0",
