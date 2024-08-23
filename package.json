@@ -54,7 +54,7 @@
     "@babel/core": "^7.25.2",
     "@babel/eslint-parser": "^7.25.1",
     "@babel/plugin-syntax-import-assertions": "^7.24.7",
-    "@babel/preset-env": "^7.25.3",
+    "@babel/preset-env": "^7.25.4",
     "@hapi/hapi": "^21.3.10",
     "@hapi/vision": "^7.0.3",
     "@modernpoacher/hooks": "^1.0.491",
