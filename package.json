@@ -58,7 +58,7 @@
     "@hapi/hapi": "^21.3.10",
     "@hapi/vision": "^7.0.3",
     "@modernpoacher/hooks": "^1.0.494",
-    "@sequencemedia/sinon-chai": "^0.0.55",
+    "@sequencemedia/sinon-chai": "^0.0.56",
     "@types/negotiator": "^0.6.3",
     "@typescript-eslint/eslint-plugin": "7.18.0",
     "@typescript-eslint/parser": "7.18.0",
@@ -67,7 +67,7 @@
     "eslint": "8.57.0",
     "eslint-config-love": "47.0.0",
     "eslint-config-standard": "^17.1.0",
-    "husky": "^9.1.5",
+    "husky": "^9.1.6",
     "mocha": "^10.7.3",
     "sinon": "^18.0.1"
   },
