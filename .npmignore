@@ -21,6 +21,9 @@
 # Deps
 .depsrc
 
+# Hooks
+.husky/hooks
+
 # Development
 examples
 test
