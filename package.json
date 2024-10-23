@@ -51,13 +51,13 @@
     "url-template": "^3.1.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.8",
-    "@babel/eslint-parser": "^7.25.8",
-    "@babel/plugin-syntax-import-assertions": "^7.25.7",
-    "@babel/preset-env": "^7.25.8",
+    "@babel/core": "^7.25.9",
+    "@babel/eslint-parser": "^7.25.9",
+    "@babel/plugin-syntax-import-assertions": "^7.25.9",
+    "@babel/preset-env": "^7.25.9",
     "@hapi/hapi": "^21.3.10",
     "@hapi/vision": "^7.0.3",
-    "@sequencemedia/sinon-chai": "^0.0.72",
+    "@sequencemedia/sinon-chai": "^0.0.73",
     "@types/negotiator": "^0.6.3",
     "@typescript-eslint/eslint-plugin": "7.18.0",
     "@typescript-eslint/parser": "7.18.0",
