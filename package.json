@@ -57,7 +57,7 @@
     "@babel/preset-env": "^7.26.0",
     "@hapi/hapi": "^21.3.12",
     "@hapi/vision": "^7.0.3",
-    "@sequencemedia/sinon-chai": "^0.0.75",
+    "@sequencemedia/sinon-chai": "^0.0.76",
     "@types/negotiator": "^0.6.3",
     "@typescript-eslint/eslint-plugin": "7.18.0",
     "@typescript-eslint/parser": "7.18.0",
@@ -67,7 +67,7 @@
     "eslint-config-love": "47.0.0",
     "eslint-config-standard": "^17.1.0",
     "husky": "^9.1.6",
-    "mocha": "^10.7.3",
+    "mocha": "^10.8.1",
     "sinon": "^19.0.2"
   },
   "imports": {
