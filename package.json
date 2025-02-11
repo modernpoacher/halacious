@@ -57,7 +57,7 @@
     "@babel/preset-env": "^7.26.8",
     "@hapi/hapi": "^21.3.12",
     "@hapi/vision": "^7.0.3",
-    "@sequencemedia/sinon-chai": "^0.0.111",
+    "@sequencemedia/sinon-chai": "^0.0.112",
     "@types/negotiator": "^0.6.3",
     "@typescript-eslint/eslint-plugin": "7.18.0",
     "@typescript-eslint/parser": "7.18.0",
