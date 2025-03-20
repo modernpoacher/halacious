@@ -1,7 +1,7 @@
 function reduce (accumulator, fieldName) {
   return (
-    Reflect.has(accumulator, fieldName)
-      ? Reflect.get(accumulator, fieldName)
+    fieldName in accumulator // Reflect.has(accumulator, fieldName)
+      ? accumulator[fieldName] // Reflect.get(accumulator, fieldName)
       : accumulator
   )
 }

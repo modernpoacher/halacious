@@ -10,14 +10,14 @@ import {
 const TEMPLATE = /{*}/
 
 /**
- * A HAL wrapper interface around an entity. Provides an api for adding new links and recursively embedding child
- * entities.
+ *   A HAL wrapper interface around an entity. Provides an api for adding new links and recursively embedding child
+ *   entities.
  *
- * @param factory
- * @param entity
- * @param self
- * @param root
- * @constructor
+ *  @param factory
+ *  @param entity
+ *  @param self
+ *  @param root
+ *  @constructor
  */
 export class Representation {
   constructor (factory, entity, link, root = this) {
@@ -88,44 +88,51 @@ export class Representation {
   }
 
   /**
-   * Adds a namespace to the 'curie' link collection. all curies in a response, top level or nested, should be declared
-   * in the top level _links collection. a reference '_root' is kept to the top level representation for this purpose
+   *  Adds a namespace to the 'curie' link collection. all curies in a response, top level or nested, should be declared
+   *  in the top level _links collection. a reference '_root' is kept to the top level representation for this purpose
    *
-   * @param namespace
+   *  @param namespace
    */
   curie (namespace) {
     if (namespace) {
+      const prefix = getPrefix(namespace)
+
       const root = this.getRoot()
 
       const namespaces = root.getNamespaces()
 
-      const prefix = getPrefix(namespace)
+      if (prefix in namespaces) return // if (Reflect.has(namespaces, prefix)) return
 
-      if (Reflect.has(namespaces, prefix)) return
-
-      Reflect.set(namespaces, prefix, namespace)
+      namespaces[prefix] = namespace // Reflect.set(namespaces, prefix, namespace)
 
       const links = root.getLinks()
 
-      const curies = Reflect.get(links, 'curies') ?? []
+      const curies = links.curies ?? [] // Reflect.get(links, 'curies') ?? []
 
       const request = this.getRequest()
 
       const namespaceUrl = this.getHalacious().namespaceUrl(request, namespace)
 
+      links.curies = curies.concat({
+        name: prefix,
+        href: `${namespaceUrl}/{rel}`,
+        templated: true
+      })
+
+      /*
       Reflect.set(links, 'curies', curies.concat({
         name: prefix,
         href: `${namespaceUrl}/{rel}`,
         templated: true
-      }))
+      })) */
     }
   }
 
   /**
-   * Adds a custom property to the HAL payload
-   * @param {String} name the property name
-   * @param {*} value the property value
-   * @return {Representation}
+   *  Adds a custom property to the HAL payload
+   *  @param {string} name the property name
+   *  @param {*} value the property value
+   *  @return {Representation}
    */
   prop (name, value) {
     this.getProps()
@@ -135,9 +142,9 @@ export class Representation {
   }
 
   /**
-   * Merges an object's properties into the custom properties collection
+   *  Merges an object's properties into the custom properties collection
    *
-   * @param prop
+   *  @param prop
    */
   merge (prop) {
     const props = this.getProps()
@@ -152,8 +159,8 @@ export class Representation {
   }
 
   /**
-   * @param {...String || String[]} args properties to ignore
-   * @return {Representation}
+   *  @param {...string || string[]} args properties to ignore
+   *  @return {Representation}
    */
   ignore (arg, ...args) {
     const props = (
@@ -174,9 +181,9 @@ export class Representation {
   }
 
   /**
-   * Prepares the representation for JSON serialization
+   *  Prepares the representation for JSON serialization
    *
-   * @return {{}}
+   *  @return {{}}
    */
   toJSON () {
     // initialize the entity
@@ -193,7 +200,7 @@ export class Representation {
     JSON.stringify(entity, (key, value) => {
       if (!key) return value
 
-      if (!ignore.has(key)) Reflect.set(object, key, value)
+      if (!ignore.has(key)) object[key] = value // Reflect.set(object, key, value)
     })
 
     const embedded = this.getEmbedded()
@@ -216,7 +223,7 @@ export class Representation {
             JSON.stringify(entryValue, (key, value) => {
               if (!key) return value
 
-              if (!ignore.has(key)) Reflect.set(currentValue, key, value)
+              if (!ignore.has(key)) currentValue[key] = value // Reflect.set(currentValue, key, value)
             })
 
             return (
@@ -235,11 +242,11 @@ export class Representation {
   }
 
   /**
-   * Creates a new link and adds it to the _links collection
+   *  Creates a new link and adds it to the _links collection
    *
-   * @param rel
-   * @param link
-   * @return {{} || []} the new link
+   *  @param rel
+   *  @param link
+   *  @return {{} || []} the new link
    */
   link (relName, link) {
     const halacious = this.getHalacious()
@@ -250,7 +257,7 @@ export class Representation {
     const links = this.getLinks()
 
     if (Array.isArray(link)) {
-      if (!Reflect.has(links, key)) Reflect.set(links, key, [])
+      if (!(key in links)) links[key] = [] // if (!Reflect.has(links, key)) Reflect.set(links, key, [])
 
       return (
         link.map((href) => this.link(relName, href))
@@ -267,20 +274,27 @@ export class Representation {
     if (TEMPLATE.test(link.href)) link.templated = true
 
     // e.g. 'mco:rel'
+    links[key] = (
+      key in links
+        ? [].concat(links[key], link)
+        : link
+    )
+
+    /*
     Reflect.set(links, key, (
       Reflect.has(links, key)
         ? [].concat(Reflect.get(links, key), link)
         : link
-    ))
+    )) */
 
     return link
   }
 
   /**
-   * Resolves a relative path against the representation's self href
+   *  Resolves a relative path against the representation's self href
    *
-   * @param relativePath
-   * @return {*}
+   *  @param relativePath
+   *  @return {*}
    */
   resolve (relativePath) {
     const href = getHref(getSelf(this.getLinks())) ?? ''
@@ -293,11 +307,12 @@ export class Representation {
   }
 
   /**
-   * Returns the path to a named route (specified by the plugins.hal.name configuration parameter), expanding any supplied
-   * path parameters.
-   * @param {String} routeName the route's name
-   * @param {{}=} params for expanding templated urls
-   * @return {*}
+   *  Returns the path to a named route (specified by the plugins.hal.name configuration parameter), expanding any supplied
+   *  path parameters
+   *
+   *  @param {string} routeName the route's name
+   *  @param {{}=} params for expanding templated urls
+   *  @return {*}
    */
   route (routeName, params) {
     return (
@@ -306,11 +321,12 @@ export class Representation {
   }
 
   /**
-   * Wraps an entity into a HAL representation and adds it to the _embedded collection
-   * @param {String} rel the rel name
-   * @param {String || {}} self an href or link object for the entity
-   * @param {{} || []} entity an object to wrap
-   * @return {entity || []}
+   *  Wraps an entity into a HAL representation and adds it to the _embedded collection
+   *
+   *  @param {string} rel the rel name
+   *  @param {string || {}} self an href or link object for the entity
+   *  @param {{} || []} entity an object to wrap
+   *  @return {entity || []}
    */
   embed (relName, self, entity) {
     const halacious = this.getHalacious()
@@ -323,7 +339,7 @@ export class Representation {
     const embedded = this.getEmbedded()
 
     if (Array.isArray(entity)) {
-      if (!Reflect.has(embedded, key)) Reflect.set(embedded, key, [])
+      if (!(key in embedded)) embedded[key] = [] // if (!Reflect.has(embedded, key)) Reflect.set(embedded, key, [])
 
       return (
         entity.map((entity) => this.embed(relName, self, entity))
@@ -338,22 +354,29 @@ export class Representation {
 
     const embed = this.factory.create(entity, self, root)
 
+    embedded[key] = (
+      key in embedded
+        ? [].concat(embedded[key], embed)
+        : embed
+    )
+
+    /*
     Reflect.set(embedded, key, (
       Reflect.has(embedded, key)
         ? [].concat(Reflect.get(embedded, key), embed)
         : embed
-    ))
+    )) */
 
     return embed
   }
 
   /**
-   * Convenience method for embedding an entity or array of entities
+   *  Convenience method for embedding an entity or array of entities
    *
-   * @param rel
-   * @param self
-   * @param arg
-   * @return {Representation}
+   *  @param rel
+   *  @param self
+   *  @param arg
+   *  @return {Representation}
    */
   embedCollection (rel, self, arg, ...args) {
     const entities = (
@@ -372,9 +395,10 @@ export class Representation {
   }
 
   /**
-   * Configures a representation using a configuration object such as those found in route definitions
-   * @param config
-   * @param callback
+   *  Configures a representation using a configuration object such as those found in route definitions
+   *
+   *  @param config
+   *  @param callback
    */
   configure (config, callback) {
     this.getHalacious().configureRepresentation(config, this, callback)
