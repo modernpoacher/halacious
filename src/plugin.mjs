@@ -151,7 +151,11 @@ const namespaceSchema = joi.object({
 
         if (!hasName(rel)) rel.name = (rel.file && path.basename(rel.file, path.extname(rel.file)))
 
-        const { error, value } = relSchema.validate(rel)
+        const {
+          error,
+          value
+        } = relSchema.validate(rel)
+
         if (error) throw error
 
         rel = value
@@ -159,7 +163,7 @@ const namespaceSchema = joi.object({
         const relName = getName(rel)
         const rels = getRels(this)
 
-        Reflect.set(rels, relName, rel)
+        rels[relName] = rel /* Reflect.set(rels, relName, rel) */
 
         rel.namespace = this
 
@@ -372,8 +376,8 @@ export const plugin = {
         // shorthand prepare function
         if (_.isFunction(config)) config = { prepare: config }
 
-        if (Reflect.has(config, 'links')) {
-          const links = Reflect.get(config, 'links')
+        if ('links' in config) { /* Reflect.has(config, 'links') */
+          const links = config.links /* Reflect.get(config, 'links') */
 
           const entity = getRepresentationEntity(representation)
 
@@ -390,9 +394,9 @@ export const plugin = {
             })
         }
 
-        if (Reflect.has(config, 'embedded')) {
+        if ('embedded' in config) { /* Reflect.has(config, 'embedded') */
           // configure embedded declarations. each rel entry is also a representation config object
-          const embedded = Reflect.get(config, 'embedded')
+          const embedded = config.embedded /* Reflect.get(config, 'embedded') */
 
           const entity = getRepresentationEntity(representation)
 
@@ -718,6 +722,7 @@ export const plugin = {
       if (!name) {
         byName
           .clear()
+
         byPrefix
           .clear()
       } else {
@@ -728,6 +733,7 @@ export const plugin = {
 
           byName
             .delete(name)
+
           byPrefix
             .delete(prefix)
         }
@@ -777,9 +783,7 @@ export const plugin = {
       const relName = getName(rel)
       const rels = getRels(namespace)
 
-      return (
-        Reflect.get(rels, relName)
-      )
+      return rels[relName] /* Reflect.get(rels, relName) */
     }
 
     /**
@@ -809,7 +813,7 @@ export const plugin = {
       if (namespace) {
         const rels = getRels(namespace)
 
-        if (!Reflect.has(rels, relName)) {
+        if (!(relName in rels)) { /* Reflect.has(rels, relName) */
           if (!settings.strict) {
             // lazily create the rel
             namespace.rel({ name: relName })
@@ -819,10 +823,11 @@ export const plugin = {
           }
         }
 
-        rel = Reflect.get(rels, relName)
+        rel = rels[relName] /* Reflect.get(rels, relName) */
       } else {
         // could be globally qualified (e.g. 'self')
         const { error, value } = relSchema.validate({ name: namespaceName })
+
         if (error) throw error
 
         rel = value

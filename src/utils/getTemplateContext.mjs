@@ -23,7 +23,8 @@ export default function getTemplateContext (template, context) {
 
       if (path) {
         const fieldValue = getFieldValueByPath(path, context)
-        if (fieldValue) Reflect.set(templateContext, path, fieldValue.toString())
+
+        if (fieldValue) templateContext[path] = String(fieldValue) /* Reflect.set(templateContext, path, fieldValue.toString()) */
       }
     }
   }
