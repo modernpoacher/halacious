@@ -53,9 +53,9 @@
   "devDependencies": {
     "@hapi/hapi": "^21.4.0",
     "@hapi/vision": "^7.0.3",
-    "@sequencemedia/eslint-config-standard": "^0.2.44",
-    "@sequencemedia/eslint-config-typescript": "^0.1.65",
-    "@sequencemedia/sinon-chai": "^0.0.136",
+    "@sequencemedia/eslint-config-standard": "^0.2.45",
+    "@sequencemedia/eslint-config-typescript": "^0.1.66",
+    "@sequencemedia/sinon-chai": "^0.0.137",
     "@types/negotiator": "^0.6.3",
     "chai": "^5.2.0",
     "cross-env": "^7.0.3",
@@ -63,7 +63,7 @@
     "globals": "^16.0.0",
     "husky": "^9.1.7",
     "mocha": "^11.1.0",
-    "sinon": "^19.0.4"
+    "sinon": "^20.0.0"
   },
   "imports": {
     "#halacious": "./src/index.mjs",
