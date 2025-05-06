@@ -25,9 +25,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/modernpoacher/halacious.git"
+    "url": "git+https://github.com/modernpoacher/halacious.git"
   },
-  "homepage": "https://github.com/modernpoacher/halacious",
+  "homepage": "https://github.com/modernpoacher/halacious#readme",
   "bugs": {
     "url": "https://github.com/modernpoacher/halacious/issues"
   },
