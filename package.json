@@ -53,9 +53,9 @@
   "devDependencies": {
     "@hapi/hapi": "^21.4.0",
     "@hapi/vision": "^7.0.3",
-    "@sequencemedia/eslint-config-standard": "^0.2.66",
-    "@sequencemedia/eslint-config-typescript": "^0.1.104",
-    "@sequencemedia/sinon-chai": "^0.0.163",
+    "@sequencemedia/eslint-config-standard": "^0.2.67",
+    "@sequencemedia/eslint-config-typescript": "^0.1.105",
+    "@sequencemedia/sinon-chai": "^0.0.164",
     "@types/negotiator": "^0.6.4",
     "chai": "^5.2.0",
     "cross-env": "^7.0.3",
