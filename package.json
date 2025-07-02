@@ -1,6 +1,6 @@
 {
   "name": "@modernpoacher/halacious",
-  "version": "7.0.262",
+  "version": "7.0.263",
   "description": "A HAL processor for Hapi",
   "keywords": [
     "HAL",
