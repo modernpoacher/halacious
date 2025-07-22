@@ -54,7 +54,7 @@
     "@hapi/hapi": "^21.4.0",
     "@hapi/vision": "^7.0.3",
     "@sequencemedia/eslint-config-standard": "^0.2.72",
-    "@sequencemedia/eslint-config-typescript": "^0.1.122",
+    "@sequencemedia/eslint-config-typescript": "^0.1.123",
     "@sequencemedia/sinon-chai": "^0.0.175",
     "@types/negotiator": "^0.6.4",
     "chai": "^5.2.1",
