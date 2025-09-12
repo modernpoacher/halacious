@@ -53,14 +53,14 @@
   "devDependencies": {
     "@hapi/hapi": "^21.4.3",
     "@hapi/vision": "^7.0.3",
-    "@sequencemedia/eslint-config-standard": "^0.2.79",
-    "@sequencemedia/eslint-config-typescript": "^0.1.137",
-    "@sequencemedia/sinon-chai": "^0.0.184",
+    "@sequencemedia/eslint-config-standard": "^0.2.80",
+    "@sequencemedia/eslint-config-typescript": "^0.1.138",
+    "@sequencemedia/sinon-chai": "^0.0.185",
     "@types/negotiator": "^0.6.4",
     "chai": "^6.0.1",
     "cross-env": "^10.0.0",
     "eslint": "^9.35.0",
-    "globals": "^16.3.0",
+    "globals": "^16.4.0",
     "husky": "^9.1.7",
     "mocha": "^11.7.2",
     "sinon": "^21.0.0"
