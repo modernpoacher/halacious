@@ -59,7 +59,7 @@
     "@types/negotiator": "^0.6.4",
     "chai": "^6.0.1",
     "cross-env": "^10.0.0",
-    "eslint": "^9.35.0",
+    "eslint": "^9.36.0",
     "globals": "^16.4.0",
     "husky": "^9.1.7",
     "mocha": "^11.7.2",
