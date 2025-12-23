@@ -57,7 +57,7 @@
     "@sequencemedia/eslint-config-typescript": "^0.1.182",
     "@sequencemedia/sinon-chai": "^0.0.213",
     "@types/negotiator": "^0.6.4",
-    "chai": "^6.2.1",
+    "chai": "^6.2.2",
     "cross-env": "^10.1.0",
     "eslint": "9.38.0",
     "globals": "^16.5.0",
