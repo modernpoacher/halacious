@@ -44,7 +44,7 @@
     "debug": "^4.4.3",
     "joi": "^18.0.2",
     "lodash": "^4.17.23",
-    "marked": "^17.0.3",
+    "marked": "^17.0.4",
     "negotiator": "^1.0.0",
     "pug": "^3.0.3",
     "urijs": "^1.19.11",
@@ -63,7 +63,7 @@
     "globals": "^17.4.0",
     "husky": "^9.1.7",
     "mocha": "^11.7.5",
-    "sinon": "^21.0.1"
+    "sinon": "^21.0.2"
   },
   "imports": {
     "#halacious": "./src/index.mjs",
