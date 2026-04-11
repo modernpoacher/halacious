@@ -63,7 +63,7 @@
     "globals": "^17.4.0",
     "husky": "^9.1.7",
     "mocha": "^11.7.5",
-    "sinon": "^21.0.3"
+    "sinon": "^21.1.1"
   },
   "imports": {
     "#halacious": "./src/index.mjs",
