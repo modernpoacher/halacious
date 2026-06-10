@@ -4,8 +4,7 @@
     "target": "ESNext",
     "noEmit": true,
     "strict": true,
-    "isolatedModules": true,
-    "baseUrl": "."
+    "isolatedModules": true
   },
   "include": [
     "src/**/*"
