@@ -53,8 +53,8 @@
   "devDependencies": {
     "@hapi/hapi": "^21.4.10",
     "@hapi/vision": "^7.0.3",
-    "@sequencemedia/eslint-config-standard": "^0.2.129",
-    "@sequencemedia/eslint-config-typescript": "^0.1.222",
+    "@sequencemedia/eslint-config-standard": "^0.2.130",
+    "@sequencemedia/eslint-config-typescript": "^0.1.224",
     "@sequencemedia/sinon-chai": "^0.0.238",
     "@types/negotiator": "^0.6.5",
     "chai": "^6.3.0",
