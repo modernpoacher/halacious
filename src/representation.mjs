@@ -98,33 +98,22 @@ export class Representation {
       const prefix = getPrefix(namespace)
 
       const root = this.getRoot()
-
       const namespaces = root.getNamespaces()
 
-      if (prefix in namespaces) return // if (Reflect.has(namespaces, prefix)) return
+      if (prefix in namespaces) return
 
-      namespaces[prefix] = namespace // Reflect.set(namespaces, prefix, namespace)
+      namespaces[prefix] = namespace
 
       const links = root.getLinks()
+      const curies = links.curies ?? []
 
-      const curies = links.curies ?? [] // Reflect.get(links, 'curies') ?? []
-
-      const request = this.getRequest()
-
-      const namespaceUrl = this.getHalacious().namespaceUrl(request, namespace)
+      const namespaceUrl = this.getHalacious().namespaceUrl(this.getRequest(), namespace)
 
       links.curies = curies.concat({
         name: prefix,
         href: `${namespaceUrl}/{rel}`,
         templated: true
       })
-
-      /*
-      Reflect.set(links, 'curies', curies.concat({
-        name: prefix,
-        href: `${namespaceUrl}/{rel}`,
-        templated: true
-      })) */
     }
   }
 
@@ -200,7 +189,7 @@ export class Representation {
     JSON.stringify(entity, (key, value) => {
       if (!key) return value
 
-      if (!ignore.has(key)) object[key] = value // Reflect.set(object, key, value)
+      if (!ignore.has(key)) object[key] = value
     })
 
     const embedded = this.getEmbedded()
@@ -223,7 +212,7 @@ export class Representation {
             JSON.stringify(entryValue, (key, value) => {
               if (!key) return value
 
-              if (!ignore.has(key)) currentValue[key] = value // Reflect.set(currentValue, key, value)
+              if (!ignore.has(key)) currentValue[key] = value
             })
 
             return (
@@ -257,7 +246,7 @@ export class Representation {
     const links = this.getLinks()
 
     if (Array.isArray(link)) {
-      if (!(key in links)) links[key] = [] // if (!Reflect.has(links, key)) Reflect.set(links, key, [])
+      if (!(key in links)) links[key] = []
 
       return (
         link.map((href) => this.link(relName, href))
@@ -268,7 +257,6 @@ export class Representation {
     this.curie(rel.namespace)
 
     const href = getHref(getSelf(links)) ?? ''
-
     link = halacious.link(link, href)
 
     if (TEMPLATE.test(link.href)) link.templated = true
@@ -279,13 +267,6 @@ export class Representation {
         ? [].concat(links[key], link)
         : link
     )
-
-    /*
-    Reflect.set(links, key, (
-      Reflect.has(links, key)
-        ? [].concat(Reflect.get(links, key), link)
-        : link
-    )) */
 
     return link
   }
@@ -339,7 +320,7 @@ export class Representation {
     const embedded = this.getEmbedded()
 
     if (Array.isArray(entity)) {
-      if (!(key in embedded)) embedded[key] = [] // if (!Reflect.has(embedded, key)) Reflect.set(embedded, key, [])
+      if (!(key in embedded)) embedded[key] = []
 
       return (
         entity.map((entity) => this.embed(relName, self, entity))
@@ -347,9 +328,7 @@ export class Representation {
     }
 
     const href = getHref(getSelf(this.getLinks())) ?? ''
-
     self = halacious.link(self, href)
-
     const root = this.getRoot()
 
     const embed = this.factory.create(entity, self, root)
@@ -359,13 +338,6 @@ export class Representation {
         ? [].concat(embedded[key], embed)
         : embed
     )
-
-    /*
-    Reflect.set(embedded, key, (
-      Reflect.has(embedded, key)
-        ? [].concat(Reflect.get(embedded, key), embed)
-        : embed
-    )) */
 
     return embed
   }

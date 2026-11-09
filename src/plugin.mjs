@@ -163,7 +163,7 @@ const namespaceSchema = joi.object({
         const relName = getName(rel)
         const rels = getRels(this)
 
-        rels[relName] = rel /* Reflect.set(rels, relName, rel) */
+        rels[relName] = rel
 
         rel.namespace = this
 
@@ -376,8 +376,8 @@ export const plugin = {
         // shorthand prepare function
         if (_.isFunction(config)) config = { prepare: config }
 
-        if ('links' in config) { /* Reflect.has(config, 'links') */
-          const links = config.links /* Reflect.get(config, 'links') */
+        if ('links' in config) {
+          const links = config.links
 
           const entity = getRepresentationEntity(representation)
 
@@ -388,15 +388,15 @@ export const plugin = {
               representation.link(rel, representationLink)
 
               // grab query options
-              if (config.query) {
+              if ('query' in config) {
                 representationLink.href += config.query
               }
             })
         }
 
-        if ('embedded' in config) { /* Reflect.has(config, 'embedded') */
+        if ('embedded' in config) {
           // configure embedded declarations. each rel entry is also a representation config object
-          const embedded = config.embedded /* Reflect.get(config, 'embedded') */
+          const embedded = config.embedded
 
           const entity = getRepresentationEntity(representation)
 
@@ -783,7 +783,7 @@ export const plugin = {
       const relName = getName(rel)
       const rels = getRels(namespace)
 
-      return rels[relName] /* Reflect.get(rels, relName) */
+      return rels[relName]
     }
 
     /**
@@ -813,7 +813,7 @@ export const plugin = {
       if (namespace) {
         const rels = getRels(namespace)
 
-        if (!(relName in rels)) { /* Reflect.has(rels, relName) */
+        if (!(relName in rels)) {
           if (!settings.strict) {
             // lazily create the rel
             namespace.rel({ name: relName })
@@ -823,7 +823,7 @@ export const plugin = {
           }
         }
 
-        rel = rels[relName] /* Reflect.get(rels, relName) */
+        rel = rels[relName]
       } else {
         // could be globally qualified (e.g. 'self')
         const { error, value } = relSchema.validate({ name: namespaceName })

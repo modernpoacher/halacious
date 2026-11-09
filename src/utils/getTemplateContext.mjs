@@ -16,15 +16,13 @@ export default function getTemplateContext (template, context) {
 
   while ((matches = REG.exec(template))) {
     if (Array.isArray(matches)) {
-      const [
-        , // input,
+      const [, // input,
         path
       ] = matches
 
       if (path) {
         const fieldValue = getFieldValueByPath(path, context)
-
-        if (fieldValue) templateContext[path] = String(fieldValue) /* Reflect.set(templateContext, path, fieldValue.toString()) */
+        if (fieldValue) templateContext[path] = String(fieldValue)
       }
     }
   }
