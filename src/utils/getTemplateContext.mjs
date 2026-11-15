@@ -16,7 +16,8 @@ export default function getTemplateContext (template, context) {
 
   while ((matches = REG.exec(template))) {
     if (Array.isArray(matches)) {
-      const [, // input,
+      const [
+        _, // eslint-disable-line no-unused-vars -- Match input
         path
       ] = matches
 
